@@ -61,6 +61,7 @@ async def auth_login():
         max_age=600,
         httponly=True,
         samesite="lax",
+        secure=True,
     )
     return response
 
@@ -92,6 +93,7 @@ async def auth_callback(request: Request, code: str = None, state: str = None):
         max_age=86400 * 30,
         httponly=True,
         samesite="lax",
+        secure=True,
     )
     response.delete_cookie("oauth_state")
     return response
