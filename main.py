@@ -40,12 +40,6 @@ def get_session(request: Request):
     except BadSignature:
         return None
 
-def get_callback_url(request: Request) -> str:
-    url = str(request.url_for("auth_callback"))
-    if "localhost" not in url and "127.0.0.1" not in url and url.startswith("http://"):
-        url = url.replace("http://", "https://", 1)
-    return url
-
 
 # ── Routes ──────────────────────────────────────────────────────────────────
 
@@ -58,13 +52,12 @@ async def home(request: Request):
 
 
 @app.get("/auth/login")
-async def auth_login(request: Request):
-    callback_url = get_callback_url(request)
-    auth_url, state, code_verifier = get_auth_url(redirect_uri=callback_url)
+async def auth_login():
+    auth_url, state, code_verifier = get_auth_url()
     response = RedirectResponse(url=auth_url)
     response.set_cookie(
         "oauth_state",
-        s.dumps({"state": state, "cv": code_verifier, "redirect_uri": callback_url}),
+        s.dumps({"state": state, "cv": code_verifier}),
         max_age=600,
         httponly=True,
         samesite="lax",
@@ -86,8 +79,7 @@ async def auth_callback(request: Request, code: str = None, state: str = None):
     if state != oauth_data["state"]:
         raise HTTPException(400, "State uyuşmuyor")
 
-    redirect_uri = oauth_data.get("redirect_uri", get_callback_url(request))
-    token_data = await exchange_code_for_token(code, oauth_data["cv"], redirect_uri=redirect_uri)
+    token_data = await exchange_code_for_token(code, oauth_data["cv"])
     access_token = token_data["access_token"]
 
     user_info = await get_user_info(access_token)
