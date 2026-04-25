@@ -177,10 +177,14 @@ async function syncBookmarks() {
     try {
         const res = await fetch('/sync', { method: 'POST' });
         const data = await res.json();
-        showToast(`✓ ${data.count} bookmark analiz edildi!`);
-        setTimeout(() => window.location.reload(), 1500);
+        if (!res.ok || data.error) {
+            showToast(`✗ ${data.error || 'Hata oluştu'}`, 6000);
+        } else {
+            showToast(`✓ ${data.count} bookmark analiz edildi!`);
+            setTimeout(() => window.location.reload(), 1500);
+        }
     } catch (e) {
-        showToast('✗ Hata oluştu, tekrar dene');
+        showToast('✗ Sunucuya bağlanılamadı: ' + e.message, 6000);
     } finally {
         btn.disabled = false;
         document.getElementById('syncText').textContent = 'Sync Et';

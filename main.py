@@ -136,7 +136,11 @@ async def sync_bookmarks(request: Request):
 
     async with httpx.AsyncClient() as http:
         me_res = await http.get("https://api.twitter.com/2/users/me", headers=headers)
-        me_res.raise_for_status()
+        if me_res.status_code != 200:
+            return JSONResponse(
+                {"error": f"Twitter kullanıcı bilgisi alınamadı: {me_res.status_code} - {me_res.text}"},
+                status_code=502
+            )
         user_x_id = me_res.json()["data"]["id"]
 
         bm_res = await http.get(
@@ -144,7 +148,11 @@ async def sync_bookmarks(request: Request):
             headers=headers,
             params={"max_results": 10, "tweet.fields": "created_at,entities"},
         )
-        bm_res.raise_for_status()
+        if bm_res.status_code != 200:
+            return JSONResponse(
+                {"error": f"Bookmarklar alınamadı: {bm_res.status_code} - {bm_res.text}"},
+                status_code=502
+            )
         bm_data = bm_res.json()
 
         if bm_data.get("data"):
@@ -152,6 +160,7 @@ async def sync_bookmarks(request: Request):
 
     if not tweets:
         return JSONResponse({"message": "Bookmark bulunamadı", "count": 0})
+
     categorized = await categorize_bookmarks(tweets)
     await save_bookmarks(session["user_id"], categorized)
 
