@@ -10,22 +10,34 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: { gray: { 950: '#070709' } },
-                    fontFamily: { sans: ['Inter var', 'Inter', 'sans-serif'] }
+                    colors: { gray: { 950: '#080809' } },
+                    fontFamily: {
+                        display: ['Syne', 'sans-serif'],
+                        sans: ['DM Sans', 'sans-serif']
+                    }
                 }
             }
         }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        * { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        * { -webkit-font-smoothing: antialiased; }
+        h1, h2, h3 { font-family: 'Syne', sans-serif; }
+        body { font-family: 'DM Sans', sans-serif; }
 
-        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
-        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1), transform 0.65s cubic-bezier(0.16,1,0.3,1); }
+        .reveal.visible { opacity: 1; transform: none; }
 
         .gradient-text {
-            background: linear-gradient(120deg, #e2e8f0 0%, #a78bfa 45%, #818cf8 100%);
+            background: linear-gradient(125deg, #ffffff 0%, #d4d4d8 40%, #a1a1aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .accent-text {
+            background: linear-gradient(125deg, #f0f9ff 0%, #bae6fd 50%, #7dd3fc 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -33,73 +45,73 @@
 
         .hero-glow {
             position: absolute;
-            width: 700px; height: 700px;
-            background: radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%);
-            border-radius: 50%;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -60%);
+            width: 800px; height: 500px;
+            background: radial-gradient(ellipse, rgba(14,165,233,0.07) 0%, transparent 70%);
+            top: 40%; left: 50%;
+            transform: translate(-50%, -50%);
             pointer-events: none;
         }
 
         .card-border {
-            background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
-            border: 1px solid rgba(255,255,255,0.07);
-            transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
         }
         .card-border:hover {
-            border-color: rgba(139,92,246,0.25);
+            border-color: rgba(255,255,255,0.12);
             transform: translateY(-2px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(124,58,237,0.06);
+            box-shadow: 0 24px 48px rgba(0,0,0,0.4);
         }
 
         .shimmer {
-            background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 100%);
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 100%);
             background-size: 200% 100%;
             animation: shimmer 2.5s infinite;
         }
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-        .dot-pulse { animation: dotPulse 2s ease-in-out infinite; }
-        @keyframes dotPulse { 0%,100%{opacity:0.4;transform:scale(1)} 50%{opacity:1;transform:scale(1.2)} }
+        .dot-pulse { animation: dotPulse 2.5s ease-in-out infinite; }
+        @keyframes dotPulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
 
-        .float { animation: float 6s ease-in-out infinite; }
-        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        .float { animation: float 7s ease-in-out infinite; }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+
+        .tag-pill {
+            display: inline-flex; align-items: center;
+            font-size: 10px; font-weight: 500; letter-spacing: 0.01em;
+            padding: 2px 7px; border-radius: 5px;
+        }
+
+        .step-line { position: relative; }
+        .step-line::before {
+            content: '';
+            position: absolute; left: 19px; top: 44px;
+            width: 1px; height: calc(100% + 4px);
+            background: linear-gradient(to bottom, rgba(255,255,255,0.08), transparent);
+        }
 
         .noise::after {
             content: '';
             position: fixed; inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
             pointer-events: none;
             z-index: 9999;
-        }
-
-        .tag-pill {
-            display: inline-flex; align-items: center;
-            font-size: 11px; font-weight: 500;
-            padding: 3px 8px; border-radius: 6px;
-        }
-
-        /* Scroll line animation */
-        .step-line { position: relative; }
-        .step-line::before {
-            content: '';
-            position: absolute; left: 19px; top: 40px;
-            width: 1px; height: calc(100% + 8px);
-            background: linear-gradient(to bottom, rgba(139,92,246,0.3), transparent);
         }
     </style>
 </head>
 <body class="bg-gray-950 text-white min-h-screen noise">
     {% block content %}{% endblock %}
     <script>
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach((e, i) => {
-                if (e.isIntersecting) {
-                    setTimeout(() => e.target.classList.add('visible'), e.target.dataset.delay || 0);
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const delay = parseInt(entry.target.dataset.delay || 0);
+                    setTimeout(() => entry.target.classList.add('visible'), delay);
+                    revealObserver.unobserve(entry.target);
                 }
             });
         }, { threshold: 0.1 });
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
     </script>
 </body>
 </html>
