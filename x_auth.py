@@ -22,7 +22,7 @@ def generate_code_challenge(verifier: str):
     return base64.urlsafe_b64encode(digest).rstrip(b"=").decode()
 
 
-def get_auth_url():
+def get_auth_url(redirect_uri: str = None):
     state = secrets.token_urlsafe(16)
     code_verifier = generate_code_verifier()
     code_challenge = generate_code_challenge(code_verifier)
@@ -30,7 +30,7 @@ def get_auth_url():
     params = {
         "response_type": "code",
         "client_id": CLIENT_ID,
-        "redirect_uri": REDIRECT_URI,
+        "redirect_uri": redirect_uri or REDIRECT_URI,
         "scope": "tweet.read users.read bookmark.read offline.access",
         "state": state,
         "code_challenge": code_challenge,
@@ -41,14 +41,14 @@ def get_auth_url():
     return url, state, code_verifier
 
 
-async def exchange_code_for_token(code: str, code_verifier: str) -> dict:
+async def exchange_code_for_token(code: str, code_verifier: str, redirect_uri: str = None) -> dict:
     async with httpx.AsyncClient() as client:
         response = await client.post(
             "https://api.twitter.com/2/oauth2/token",
             data={
                 "code": code,
                 "grant_type": "authorization_code",
-                "redirect_uri": REDIRECT_URI,
+                "redirect_uri": redirect_uri or REDIRECT_URI,
                 "code_verifier": code_verifier,
             },
             auth=(CLIENT_ID, CLIENT_SECRET),
