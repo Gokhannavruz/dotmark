@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from itsdangerous import URLSafeSerializer, BadSignature
+from urllib.parse import urlencode
 
 from fastapi import Form
 from database import (
@@ -15,7 +16,7 @@ from database import (
     save_mvp_prompt,
 )
 from ai_service import categorize_bookmarks, deep_analyze, generate_mvp_prompt, generate_mvp_questions
-from x_auth import get_auth_url, exchange_code_for_token, get_user_info
+from x_auth import generate_code_verifier, generate_code_challenge, exchange_code_for_token, get_user_info
 
 load_dotenv()
 
@@ -53,32 +54,35 @@ async def home(request: Request):
 
 @app.get("/auth/login")
 async def auth_login():
-    auth_url, state, code_verifier = get_auth_url()
-    response = RedirectResponse(url=auth_url)
-    response.set_cookie(
-        "oauth_state",
-        s.dumps({"state": state, "cv": code_verifier}),
-        max_age=600,
-        httponly=True,
-        samesite="lax",
-        secure=True,
-    )
-    return response
+    state = secrets.token_urlsafe(16)
+    code_verifier = generate_code_verifier()
+    code_challenge = generate_code_challenge(code_verifier)
+
+    # Embed code_verifier inside the signed state — no cookie needed
+    signed_state = s.dumps({"state": state, "cv": code_verifier})
+
+    params = {
+        "response_type": "code",
+        "client_id": os.getenv("CLIENT_ID"),
+        "redirect_uri": os.getenv("REDIRECT_URI"),
+        "scope": "tweet.read users.read bookmark.read offline.access",
+        "state": signed_state,
+        "code_challenge": code_challenge,
+        "code_challenge_method": "S256",
+    }
+    auth_url = f"https://twitter.com/i/oauth2/authorize?{urlencode(params)}"
+    return RedirectResponse(url=auth_url)
 
 
 @app.get("/auth/callback")
 async def auth_callback(request: Request, code: str = None, state: str = None):
-    oauth_cookie = request.cookies.get("oauth_state")
-    if not oauth_cookie:
+    if not state:
         raise HTTPException(400, "OAuth state eksik")
 
     try:
-        oauth_data = s.loads(oauth_cookie)
+        oauth_data = s.loads(state)
     except BadSignature:
         raise HTTPException(400, "Geçersiz OAuth state")
-
-    if state != oauth_data["state"]:
-        raise HTTPException(400, "State uyuşmuyor")
 
     token_data = await exchange_code_for_token(code, oauth_data["cv"])
     access_token = token_data["access_token"]
@@ -95,7 +99,6 @@ async def auth_callback(request: Request, code: str = None, state: str = None):
         samesite="lax",
         secure=True,
     )
-    response.delete_cookie("oauth_state")
     return response
 
 
