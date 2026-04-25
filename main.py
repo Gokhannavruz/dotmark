@@ -125,46 +125,49 @@ async def dashboard(request: Request):
 async def sync_bookmarks(request: Request):
     session = get_session(request)
     if not session:
-        raise HTTPException(401, "Giriş yapılmamış")
+        return JSONResponse({"error": "Giriş yapılmamış"}, status_code=401)
 
-    user = await get_user_by_id(session["user_id"])
-    if not user:
-        raise HTTPException(404, "Kullanıcı bulunamadı")
+    try:
+        user = await get_user_by_id(session["user_id"])
+        if not user:
+            return JSONResponse({"error": "Kullanıcı bulunamadı"}, status_code=404)
 
-    headers = {"Authorization": f"Bearer {user['access_token']}"}
-    tweets = []
+        headers = {"Authorization": f"Bearer {user['access_token']}"}
+        tweets = []
 
-    async with httpx.AsyncClient() as http:
-        me_res = await http.get("https://api.twitter.com/2/users/me", headers=headers)
-        if me_res.status_code != 200:
-            return JSONResponse(
-                {"error": f"Twitter kullanıcı bilgisi alınamadı: {me_res.status_code} - {me_res.text}"},
-                status_code=502
+        async with httpx.AsyncClient() as http:
+            me_res = await http.get("https://api.twitter.com/2/users/me", headers=headers)
+            if me_res.status_code != 200:
+                return JSONResponse(
+                    {"error": f"Twitter kullanıcı bilgisi alınamadı ({me_res.status_code}): {me_res.text}"},
+                    status_code=502
+                )
+            user_x_id = me_res.json()["data"]["id"]
+
+            bm_res = await http.get(
+                f"https://api.twitter.com/2/users/{user_x_id}/bookmarks",
+                headers=headers,
+                params={"max_results": 10, "tweet.fields": "created_at,entities"},
             )
-        user_x_id = me_res.json()["data"]["id"]
+            if bm_res.status_code != 200:
+                return JSONResponse(
+                    {"error": f"Bookmarklar alınamadı ({bm_res.status_code}): {bm_res.text}"},
+                    status_code=502
+                )
+            bm_data = bm_res.json()
 
-        bm_res = await http.get(
-            f"https://api.twitter.com/2/users/{user_x_id}/bookmarks",
-            headers=headers,
-            params={"max_results": 10, "tweet.fields": "created_at,entities"},
-        )
-        if bm_res.status_code != 200:
-            return JSONResponse(
-                {"error": f"Bookmarklar alınamadı: {bm_res.status_code} - {bm_res.text}"},
-                status_code=502
-            )
-        bm_data = bm_res.json()
+            if bm_data.get("data"):
+                tweets = [{"id": str(t["id"]), "text": t["text"]} for t in bm_data["data"]]
 
-        if bm_data.get("data"):
-            tweets = [{"id": str(t["id"]), "text": t["text"]} for t in bm_data["data"]]
+        if not tweets:
+            return JSONResponse({"message": "Bookmark bulunamadı", "count": 0})
 
-    if not tweets:
-        return JSONResponse({"message": "Bookmark bulunamadı", "count": 0})
+        categorized = await categorize_bookmarks(tweets)
+        await save_bookmarks(session["user_id"], categorized)
+        return JSONResponse({"message": "Tamamlandı!", "count": len(categorized)})
 
-    categorized = await categorize_bookmarks(tweets)
-    await save_bookmarks(session["user_id"], categorized)
-
-    return JSONResponse({"message": "Tamamlandı!", "count": len(categorized)})
+    except Exception as e:
+        return JSONResponse({"error": f"{type(e).__name__}: {str(e)}"}, status_code=500)
 
 
 @app.get("/bookmark/{tweet_id}", response_class=HTMLResponse)
