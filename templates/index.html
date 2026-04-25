@@ -2,276 +2,307 @@
 {% block content %}
 
 <!-- Nav -->
-<nav class="fixed top-0 left-0 right-0 z-50 border-b border-white/5 backdrop-blur-xl bg-gray-950/80">
-    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <span class="font-bold text-lg tracking-tight">dotmark</span>
-        {% if logged_in %}
-        <a href="/dashboard" class="text-sm bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-lg font-medium transition">
-            Dashboard
-        </a>
-        {% else %}
-        <a href="/auth/login" class="text-sm bg-white hover:bg-gray-100 text-black px-4 py-2 rounded-lg font-semibold transition flex items-center gap-2">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            Giriş Yap
-        </a>
-        {% endif %}
+<nav class="fixed top-0 inset-x-0 z-50 h-14 flex items-center border-b border-white/[0.05] backdrop-blur-2xl bg-gray-950/70">
+    <div class="max-w-5xl mx-auto px-6 w-full flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-md bg-violet-600 flex items-center justify-center">
+                <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+            </div>
+            <span class="font-semibold text-sm tracking-tight">dotmark</span>
+        </div>
+        <div class="flex items-center gap-6">
+            <a href="#features" class="text-xs text-gray-500 hover:text-white transition">Features</a>
+            <a href="#how" class="text-xs text-gray-500 hover:text-white transition">How it works</a>
+            {% if logged_in %}
+            <a href="/dashboard" class="text-xs bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-lg font-medium transition">Dashboard →</a>
+            {% else %}
+            <a href="/auth/login" class="text-xs bg-white hover:bg-gray-100 text-black px-4 py-2 rounded-lg font-semibold transition flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                Sign in
+            </a>
+            {% endif %}
+        </div>
     </div>
 </nav>
 
 <!-- Hero -->
-<section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+<section class="relative flex flex-col items-center justify-center min-h-screen pt-14 overflow-hidden">
+    <div class="hero-glow"></div>
 
-    <!-- Background glow blobs -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-violet-600/10 rounded-full blur-[120px]"></div>
-        <div class="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-blue-600/8 rounded-full blur-[100px]"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-purple-800/10 rounded-full blur-[80px]"></div>
-    </div>
+    <!-- Grid pattern -->
+    <div class="absolute inset-0 opacity-[0.015]" style="background-image: linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px); background-size: 64px 64px;"></div>
 
-    <div class="relative max-w-6xl mx-auto px-6 py-24 flex flex-col items-center text-center">
+    <div class="relative max-w-5xl mx-auto px-6 text-center">
 
-        <!-- Badge -->
-        <div class="opacity-0 animate-fade-up mb-8 inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-full text-sm text-gray-400">
-            <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse-slow"></span>
-            AI destekli bookmark yönetimi
+        <!-- Status badge -->
+        <div class="reveal mb-10 inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] text-xs text-gray-500">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 dot-pulse"></span>
+            AI-powered bookmark intelligence
+            <span class="text-white/20">·</span>
+            <span class="text-violet-400">Free to start</span>
         </div>
 
         <!-- Headline -->
-        <h1 class="opacity-0 animate-fade-up delay-100 text-5xl md:text-7xl font-black tracking-tight leading-none mb-6 max-w-4xl">
-            Bookmark biriktirme.<br>
-            <span class="gradient-text">Harekete geç.</span>
+        <h1 class="reveal text-6xl md:text-[80px] font-black tracking-tight leading-[0.95] mb-6" data-delay="80">
+            Stop saving.<br>
+            <span class="gradient-text">Start doing.</span>
         </h1>
 
-        <!-- Subheadline -->
-        <p class="opacity-0 animate-fade-up delay-200 text-gray-400 text-lg md:text-xl max-w-2xl mb-10 leading-relaxed">
-            Twitter bookmark'larını AI analiz eder, kategorize eder, önem sırasına koyar
-            ve her biri için net bir aksiyon planı çıkarır.
+        <p class="reveal text-gray-500 text-lg max-w-xl mx-auto mb-10 leading-relaxed" data-delay="160">
+            Dotmark analyzes your Twitter bookmarks with AI — categorizing, prioritizing, and creating an action plan for every single one.
         </p>
 
-        <!-- CTA -->
-        <div class="opacity-0 animate-fade-up delay-300 flex flex-col sm:flex-row gap-3 items-center">
+        <div class="reveal flex flex-col sm:flex-row items-center justify-center gap-3" data-delay="240">
             {% if logged_in %}
-            <a href="/dashboard"
-               class="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-semibold px-8 py-4 rounded-xl transition text-lg">
-                Dashboard'a Git →
+            <a href="/dashboard" class="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-semibold px-7 py-3.5 rounded-xl transition text-sm">
+                Open Dashboard →
             </a>
             {% else %}
-            <a href="/auth/login"
-               class="inline-flex items-center gap-3 bg-white hover:bg-gray-100 text-black font-bold px-8 py-4 rounded-xl transition text-base">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                X ile Ücretsiz Başla
+            <a href="/auth/login" class="inline-flex items-center gap-2.5 bg-white hover:bg-gray-50 text-black font-bold px-7 py-3.5 rounded-xl transition text-sm group">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                Continue with X
+                <svg class="w-3 h-3 opacity-40 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </a>
-            <span class="text-gray-600 text-sm">Kredi kartı gerekmez</span>
+            <p class="text-xs text-gray-700">No credit card required</p>
             {% endif %}
         </div>
 
-        <!-- Mock UI Preview -->
-        <div class="mt-20 w-full max-w-4xl glow rounded-2xl border border-white/8 bg-gray-900/60 backdrop-blur overflow-hidden">
+        <!-- Mock UI -->
+        <div class="reveal mt-20 float" data-delay="320">
+            <div class="rounded-2xl border border-white/[0.07] overflow-hidden" style="background: linear-gradient(160deg, rgba(30,27,46,0.9) 0%, rgba(10,9,15,0.95) 100%); box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 80px rgba(124,58,237,0.08), inset 0 1px 0 rgba(255,255,255,0.06);">
 
-            <!-- Window chrome -->
-            <div class="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-gray-950/50">
-                <div class="w-3 h-3 rounded-full bg-red-500/60"></div>
-                <div class="w-3 h-3 rounded-full bg-yellow-500/60"></div>
-                <div class="w-3 h-3 rounded-full bg-green-500/60"></div>
-                <div class="flex-1 mx-4 bg-gray-800 rounded-md h-6 flex items-center px-3">
-                    <span class="text-gray-600 text-xs">dotmark.io/dashboard</span>
-                </div>
-            </div>
-
-            <!-- Mock content -->
-            <div class="p-6">
-                <div class="flex items-center justify-between mb-5">
-                    <div>
-                        <div class="h-5 w-36 bg-white/10 rounded-md mb-1"></div>
-                        <div class="h-3 w-20 bg-white/5 rounded-md"></div>
+                <!-- Title bar -->
+                <div class="flex items-center gap-2 px-4 h-10 border-b border-white/[0.05]" style="background: rgba(0,0,0,0.2);">
+                    <div class="flex gap-1.5">
+                        <div class="w-2.5 h-2.5 rounded-full bg-white/10"></div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-white/10"></div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-white/10"></div>
                     </div>
-                    <div class="h-9 w-24 bg-violet-600/40 rounded-lg border border-violet-500/30"></div>
+                    <div class="flex-1 mx-4 h-5 rounded-md bg-white/[0.04] flex items-center justify-center">
+                        <span class="text-gray-700 text-[10px]">dotmark.io/dashboard</span>
+                    </div>
                 </div>
 
-                <div class="flex gap-2 mb-5 overflow-hidden">
-                    <div class="h-7 w-16 bg-violet-500/20 border border-violet-500/30 rounded-lg text-xs text-violet-400 flex items-center justify-center font-medium">Tümü</div>
-                    <div class="h-7 w-20 bg-white/5 border border-white/5 rounded-lg"></div>
-                    <div class="h-7 w-16 bg-white/5 border border-white/5 rounded-lg"></div>
-                    <div class="h-7 w-24 bg-white/5 border border-white/5 rounded-lg"></div>
-                    <div class="h-7 w-16 bg-white/5 border border-white/5 rounded-lg"></div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <!-- Card 1 -->
-                    <div class="bg-gray-950/80 border border-white/8 rounded-xl p-4 flex flex-col gap-3">
-                        <div class="flex gap-2">
-                            <div class="h-5 w-16 bg-blue-500/20 border border-blue-500/20 rounded-md text-xs text-blue-400 flex items-center justify-center">Tutorial</div>
-                            <div class="h-5 w-20 bg-emerald-500/20 border border-emerald-500/20 rounded-md text-xs text-emerald-400 flex items-center justify-center">Beginner</div>
+                <div class="p-5">
+                    <!-- Top bar -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="h-4 w-28 rounded bg-white/[0.08] shimmer"></div>
+                            <div class="h-4 w-16 rounded bg-white/[0.04]"></div>
                         </div>
-                        <div class="space-y-1.5">
-                            <div class="h-3 w-full bg-white/15 rounded"></div>
-                            <div class="h-3 w-4/5 bg-white/10 rounded"></div>
-                        </div>
-                        <div class="space-y-1">
-                            <div class="flex gap-2 items-center"><div class="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0"></div><div class="h-2 w-full bg-white/8 rounded"></div></div>
-                            <div class="flex gap-2 items-center"><div class="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0"></div><div class="h-2 w-3/4 bg-white/8 rounded"></div></div>
-                        </div>
-                        <div class="flex gap-1 mt-auto">
-                            <div class="h-5 w-14 bg-white/5 rounded-md"></div>
-                            <div class="h-5 w-12 bg-white/5 rounded-md"></div>
+                        <div class="h-8 w-20 rounded-lg bg-violet-600/25 border border-violet-500/20 flex items-center justify-center">
+                            <span class="text-violet-400 text-[10px] font-medium">↻ Sync</span>
                         </div>
                     </div>
 
-                    <!-- Card 2 (highlighted) -->
-                    <div class="bg-gray-950/80 border border-violet-500/25 rounded-xl p-4 flex flex-col gap-3" style="box-shadow: 0 0 20px rgba(139,92,246,0.08)">
-                        <div class="flex gap-2">
-                            <div class="h-5 w-14 bg-purple-500/20 border border-purple-500/20 rounded-md text-xs text-purple-400 flex items-center justify-center">Tool</div>
-                            <div class="h-5 w-24 bg-amber-500/20 border border-amber-500/20 rounded-md text-xs text-amber-400 flex items-center justify-center">Intermediate</div>
-                        </div>
-                        <div class="space-y-1.5">
-                            <div class="h-3 w-full bg-white/20 rounded"></div>
-                            <div class="h-3 w-3/4 bg-white/15 rounded"></div>
-                        </div>
-                        <div class="space-y-1">
-                            <div class="flex gap-2 items-center"><div class="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0"></div><div class="h-2 w-full bg-white/10 rounded"></div></div>
-                            <div class="flex gap-2 items-center"><div class="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0"></div><div class="h-2 w-4/5 bg-white/10 rounded"></div></div>
-                            <div class="flex gap-2 items-center"><div class="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0"></div><div class="h-2 w-2/3 bg-white/10 rounded"></div></div>
-                        </div>
-                        <div class="flex gap-1 mt-auto">
-                            <div class="h-5 w-16 bg-white/8 rounded-md"></div>
-                            <div class="h-5 w-12 bg-white/8 rounded-md"></div>
-                            <div class="h-5 w-10 bg-white/8 rounded-md"></div>
-                        </div>
+                    <!-- Filter pills -->
+                    <div class="flex gap-1.5 mb-4">
+                        <div class="h-6 px-3 rounded-lg bg-violet-600/20 border border-violet-500/25 flex items-center justify-center"><span class="text-violet-300 text-[10px] font-medium">All</span></div>
+                        <div class="h-6 px-3 rounded-lg bg-white/[0.04] border border-white/[0.05] flex items-center justify-center"><span class="text-gray-600 text-[10px]">AI/ML</span></div>
+                        <div class="h-6 px-3 rounded-lg bg-white/[0.04] border border-white/[0.05] flex items-center justify-center"><span class="text-gray-600 text-[10px]">Marketing</span></div>
+                        <div class="h-6 px-3 rounded-lg bg-white/[0.04] border border-white/[0.05] flex items-center justify-center"><span class="text-gray-600 text-[10px]">Business</span></div>
+                        <div class="h-6 px-3 rounded-lg bg-white/[0.04] border border-white/[0.05] flex items-center justify-center"><span class="text-gray-600 text-[10px]">Tools</span></div>
                     </div>
 
-                    <!-- Card 3 -->
-                    <div class="bg-gray-950/80 border border-white/8 rounded-xl p-4 flex flex-col gap-3">
-                        <div class="flex gap-2">
-                            <div class="h-5 w-14 bg-orange-500/20 border border-orange-500/20 rounded-md text-xs text-orange-400 flex items-center justify-center">Thread</div>
-                            <div class="h-5 w-20 bg-red-500/20 border border-red-500/20 rounded-md text-xs text-red-400 flex items-center justify-center">Advanced</div>
+                    <!-- Cards -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <!-- Card 1 -->
+                        <div class="rounded-xl border border-white/[0.06] p-3.5 flex flex-col gap-2.5" style="background: rgba(0,0,0,0.25);">
+                            <div class="flex gap-1.5">
+                                <div class="tag-pill bg-blue-500/15 text-blue-400 border border-blue-500/20">Tutorial</div>
+                                <div class="tag-pill bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">Easy</div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <div class="h-2.5 w-full rounded-sm bg-white/[0.12]"></div>
+                                <div class="h-2.5 w-4/5 rounded-sm bg-white/[0.08]"></div>
+                            </div>
+                            <div class="space-y-1 pt-0.5">
+                                <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-violet-400/60 shrink-0"></div><div class="h-2 w-full rounded-sm bg-white/[0.06]"></div></div>
+                                <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-violet-400/60 shrink-0"></div><div class="h-2 w-3/4 rounded-sm bg-white/[0.06]"></div></div>
+                            </div>
+                            <div class="flex items-center justify-between mt-auto pt-1 border-t border-white/[0.04]">
+                                <div class="flex gap-1"><div class="h-4 w-10 rounded bg-white/[0.04]"></div><div class="h-4 w-8 rounded bg-white/[0.04]"></div></div>
+                                <div class="flex gap-0.5">
+                                    <div class="w-2 h-2 rounded-sm bg-yellow-400/60"></div>
+                                    <div class="w-2 h-2 rounded-sm bg-yellow-400/60"></div>
+                                    <div class="w-2 h-2 rounded-sm bg-yellow-400/60"></div>
+                                    <div class="w-2 h-2 rounded-sm bg-white/10"></div>
+                                    <div class="w-2 h-2 rounded-sm bg-white/10"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="space-y-1.5">
-                            <div class="h-3 w-full bg-white/15 rounded"></div>
-                            <div class="h-3 w-5/6 bg-white/10 rounded"></div>
+
+                        <!-- Card 2 - highlighted -->
+                        <div class="rounded-xl p-3.5 flex flex-col gap-2.5 relative overflow-hidden" style="background: rgba(124,58,237,0.08); border: 1px solid rgba(139,92,246,0.2); box-shadow: 0 0 30px rgba(124,58,237,0.06);">
+                            <div class="absolute top-0 right-0 w-16 h-16 opacity-20" style="background: radial-gradient(circle, rgba(139,92,246,0.8), transparent 70%);"></div>
+                            <div class="flex gap-1.5">
+                                <div class="tag-pill bg-purple-500/15 text-purple-400 border border-purple-500/20">Tool</div>
+                                <div class="tag-pill bg-amber-500/15 text-amber-400 border border-amber-500/20">Medium</div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <div class="h-2.5 w-full rounded-sm bg-white/[0.16]"></div>
+                                <div class="h-2.5 w-5/6 rounded-sm bg-white/[0.10]"></div>
+                            </div>
+                            <div class="space-y-1 pt-0.5">
+                                <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-violet-400 shrink-0"></div><div class="h-2 w-full rounded-sm bg-white/[0.09]"></div></div>
+                                <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-violet-400 shrink-0"></div><div class="h-2 w-4/5 rounded-sm bg-white/[0.09]"></div></div>
+                                <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-violet-400 shrink-0"></div><div class="h-2 w-2/3 rounded-sm bg-white/[0.09]"></div></div>
+                            </div>
+                            <div class="flex items-center justify-between mt-auto pt-1 border-t border-violet-500/10">
+                                <div class="flex gap-1"><div class="h-4 w-12 rounded bg-violet-500/15"></div><div class="h-4 w-8 rounded bg-violet-500/15"></div></div>
+                                <div class="flex gap-0.5">
+                                    <div class="w-2 h-2 rounded-sm bg-yellow-400/70"></div>
+                                    <div class="w-2 h-2 rounded-sm bg-yellow-400/70"></div>
+                                    <div class="w-2 h-2 rounded-sm bg-yellow-400/70"></div>
+                                    <div class="w-2 h-2 rounded-sm bg-yellow-400/70"></div>
+                                    <div class="w-2 h-2 rounded-sm bg-white/10"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="space-y-1">
-                            <div class="flex gap-2 items-center"><div class="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0"></div><div class="h-2 w-full bg-white/8 rounded"></div></div>
-                            <div class="flex gap-2 items-center"><div class="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0"></div><div class="h-2 w-3/5 bg-white/8 rounded"></div></div>
-                        </div>
-                        <div class="flex gap-1 mt-auto">
-                            <div class="h-5 w-12 bg-white/5 rounded-md"></div>
-                            <div class="h-5 w-16 bg-white/5 rounded-md"></div>
+
+                        <!-- Card 3 -->
+                        <div class="rounded-xl border border-white/[0.06] p-3.5 flex flex-col gap-2.5" style="background: rgba(0,0,0,0.25);">
+                            <div class="flex gap-1.5">
+                                <div class="tag-pill bg-orange-500/15 text-orange-400 border border-orange-500/20">Thread</div>
+                                <div class="tag-pill bg-red-500/15 text-red-400 border border-red-500/20">Advanced</div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <div class="h-2.5 w-full rounded-sm bg-white/[0.12]"></div>
+                                <div class="h-2.5 w-3/4 rounded-sm bg-white/[0.08]"></div>
+                            </div>
+                            <div class="space-y-1 pt-0.5">
+                                <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-violet-400/60 shrink-0"></div><div class="h-2 w-full rounded-sm bg-white/[0.06]"></div></div>
+                                <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-violet-400/60 shrink-0"></div><div class="h-2 w-3/5 rounded-sm bg-white/[0.06]"></div></div>
+                            </div>
+                            <div class="flex items-center justify-between mt-auto pt-1 border-t border-white/[0.04]">
+                                <div class="flex gap-1"><div class="h-4 w-8 rounded bg-white/[0.04]"></div><div class="h-4 w-12 rounded bg-white/[0.04]"></div></div>
+                                <div class="flex gap-0.5">
+                                    <div class="w-2 h-2 rounded-sm bg-yellow-400/60"></div>
+                                    <div class="w-2 h-2 rounded-sm bg-yellow-400/60"></div>
+                                    <div class="w-2 h-2 rounded-sm bg-yellow-400/60"></div>
+                                    <div class="w-2 h-2 rounded-sm bg-yellow-400/60"></div>
+                                    <div class="w-2 h-2 rounded-sm bg-yellow-400/60"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 </section>
 
-<!-- Stats -->
-<section class="border-y border-white/5 bg-white/2">
-    <div class="max-w-4xl mx-auto px-6 py-12 grid grid-cols-3 gap-8 text-center">
-        <div>
-            <div class="text-3xl font-black text-white mb-1">10x</div>
-            <div class="text-gray-500 text-sm">Daha hızlı organize</div>
+<!-- Stats divider -->
+<div class="border-y border-white/[0.05]">
+    <div class="max-w-3xl mx-auto px-6 py-10 grid grid-cols-3 divide-x divide-white/[0.05]">
+        <div class="text-center px-6">
+            <div class="text-2xl font-black text-white mb-0.5">10×</div>
+            <div class="text-gray-600 text-xs">Faster organization</div>
         </div>
-        <div>
-            <div class="text-3xl font-black text-white mb-1">0</div>
-            <div class="text-gray-500 text-sm">Elle yapılan iş</div>
+        <div class="text-center px-6">
+            <div class="text-2xl font-black text-white mb-0.5">Zero</div>
+            <div class="text-gray-600 text-xs">Manual work</div>
         </div>
-        <div>
-            <div class="text-3xl font-black text-white mb-1">100%</div>
-            <div class="text-gray-500 text-sm">AI destekli analiz</div>
+        <div class="text-center px-6">
+            <div class="text-2xl font-black text-white mb-0.5">100%</div>
+            <div class="text-gray-600 text-xs">AI-powered analysis</div>
         </div>
     </div>
-</section>
+</div>
 
 <!-- Features -->
-<section class="max-w-6xl mx-auto px-6 py-32">
+<section id="features" class="max-w-5xl mx-auto px-6 py-28">
     <div class="text-center mb-16">
-        <p class="text-violet-400 text-sm font-semibold uppercase tracking-widest mb-4">Özellikler</p>
-        <h2 class="text-4xl md:text-5xl font-black tracking-tight">Sadece saklama. <span class="gradient-text">Anlama.</span></h2>
+        <p class="reveal text-violet-500 text-xs font-semibold uppercase tracking-[0.2em] mb-4">Features</p>
+        <h2 class="reveal text-4xl md:text-5xl font-black tracking-tight" data-delay="80">
+            Not just saved.<br><span class="gradient-text">Understood.</span>
+        </h2>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
 
-        <div class="card-glow bg-gray-900/50 border border-white/8 rounded-2xl p-6 transition-all duration-300">
-            <div class="w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-500/20 flex items-center justify-center mb-4">
-                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        <div class="reveal card-border rounded-2xl p-6" data-delay="0">
+            <div class="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/15 flex items-center justify-center mb-5">
+                <svg class="w-4.5 h-4.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg>
             </div>
-            <h3 class="font-bold text-white mb-2">Otomatik Kategorileme</h3>
-            <p class="text-gray-500 text-sm leading-relaxed">Her bookmark AI tarafından analiz edilir. Kategori, zorluk seviyesi, içerik türü otomatik atanır.</p>
+            <h3 class="font-semibold text-white text-sm mb-1.5">Auto-categorization</h3>
+            <p class="text-gray-600 text-xs leading-relaxed">Every bookmark is analyzed and tagged with category, content type, and difficulty level — automatically.</p>
         </div>
 
-        <div class="card-glow bg-gray-900/50 border border-white/8 rounded-2xl p-6 transition-all duration-300">
-            <div class="w-10 h-10 rounded-xl bg-violet-500/15 border border-violet-500/20 flex items-center justify-center mb-4">
-                <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <div class="reveal card-border rounded-2xl p-6" data-delay="60">
+            <div class="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/15 flex items-center justify-center mb-5">
+                <svg class="w-4.5 h-4.5 text-violet-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
             </div>
-            <h3 class="font-bold text-white mb-2">Öncelik Sıralaması</h3>
-            <p class="text-gray-500 text-sm leading-relaxed">Hangi bookmark'a önce bakman gerektiğini AI belirler. Önem puanı ile zamanını doğru kullan.</p>
+            <h3 class="font-semibold text-white text-sm mb-1.5">Priority scoring</h3>
+            <p class="text-gray-600 text-xs leading-relaxed">AI ranks your bookmarks by relevance and value. Always know what deserves your attention first.</p>
         </div>
 
-        <div class="card-glow bg-gray-900/50 border border-white/8 rounded-2xl p-6 transition-all duration-300">
-            <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center mb-4">
-                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        <div class="reveal card-border rounded-2xl p-6" data-delay="120">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center mb-5">
+                <svg class="w-4.5 h-4.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
-            <h3 class="font-bold text-white mb-2">Aksiyon Planı</h3>
-            <p class="text-gray-500 text-sm leading-relaxed">Her bookmark için "Ne yapmalısın?" sorusunun cevabı hazır. Okumak yetmez, uygulamak gerekir.</p>
+            <h3 class="font-semibold text-white text-sm mb-1.5">Action plans</h3>
+            <p class="text-gray-600 text-xs leading-relaxed">For each bookmark, get a clear "what to do next" — concrete steps, not just passive reading.</p>
         </div>
 
-        <div class="card-glow bg-gray-900/50 border border-white/8 rounded-2xl p-6 transition-all duration-300">
-            <div class="w-10 h-10 rounded-xl bg-orange-500/15 border border-orange-500/20 flex items-center justify-center mb-4">
-                <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+        <div class="reveal card-border rounded-2xl p-6" data-delay="0">
+            <div class="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/15 flex items-center justify-center mb-5">
+                <svg class="w-4.5 h-4.5 text-orange-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
             </div>
-            <h3 class="font-bold text-white mb-2">Öğrenme Yol Haritası</h3>
-            <p class="text-gray-500 text-sm leading-relaxed">İçeriği öğrenmek için aşamalı roadmap oluşturulur. Başlangıç, orta ve ileri seviye adımlar.</p>
+            <h3 class="font-semibold text-white text-sm mb-1.5">Learning roadmaps</h3>
+            <p class="text-gray-600 text-xs leading-relaxed">Turn any bookmark into a structured learning path with phases, milestones, and time estimates.</p>
         </div>
 
-        <div class="card-glow bg-gray-900/50 border border-white/8 rounded-2xl p-6 transition-all duration-300">
-            <div class="w-10 h-10 rounded-xl bg-pink-500/15 border border-pink-500/20 flex items-center justify-center mb-4">
-                <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <div class="reveal card-border rounded-2xl p-6" data-delay="60">
+            <div class="w-9 h-9 rounded-xl bg-pink-500/10 border border-pink-500/15 flex items-center justify-center mb-5">
+                <svg class="w-4.5 h-4.5 text-pink-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
             </div>
-            <h3 class="font-bold text-white mb-2">Derin Analiz</h3>
-            <p class="text-gray-500 text-sm leading-relaxed">Bookmark'ın önemi, önkoşullar, benzer içeriklerle bağlantısı — hepsi tek sayfada.</p>
+            <h3 class="font-semibold text-white text-sm mb-1.5">Deep analysis</h3>
+            <p class="text-gray-600 text-xs leading-relaxed">Why it matters, prerequisites, connections to similar content — everything in one clean view.</p>
         </div>
 
-        <div class="card-glow bg-gray-900/50 border border-white/8 rounded-2xl p-6 transition-all duration-300">
-            <div class="w-10 h-10 rounded-xl bg-cyan-500/15 border border-cyan-500/20 flex items-center justify-center mb-4">
-                <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/></svg>
+        <div class="reveal card-border rounded-2xl p-6" data-delay="120">
+            <div class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/15 flex items-center justify-center mb-5">
+                <svg class="w-4.5 h-4.5 text-cyan-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
             </div>
-            <h3 class="font-bold text-white mb-2">Dışa Aktar</h3>
-            <p class="text-gray-500 text-sm leading-relaxed">Roadmap'leri Markdown olarak indir, Notion'a ya da istediğin yere yapıştır.</p>
+            <h3 class="font-semibold text-white text-sm mb-1.5">Export anywhere</h3>
+            <p class="text-gray-600 text-xs leading-relaxed">Download your roadmaps as Markdown. Paste into Notion, Obsidian, or wherever you work.</p>
         </div>
 
     </div>
 </section>
 
 <!-- How it works -->
-<section class="border-t border-white/5 bg-gradient-to-b from-gray-950 to-gray-900/30">
-    <div class="max-w-4xl mx-auto px-6 py-32">
+<section id="how" class="border-t border-white/[0.05]">
+    <div class="max-w-2xl mx-auto px-6 py-28">
         <div class="text-center mb-16">
-            <p class="text-violet-400 text-sm font-semibold uppercase tracking-widest mb-4">Nasıl Çalışır</p>
-            <h2 class="text-4xl md:text-5xl font-black tracking-tight">3 adımda <span class="gradient-text">düzen.</span></h2>
+            <p class="reveal text-violet-500 text-xs font-semibold uppercase tracking-[0.2em] mb-4">How it works</p>
+            <h2 class="reveal text-4xl md:text-5xl font-black tracking-tight" data-delay="80">Simple by design.</h2>
         </div>
 
-        <div class="space-y-6">
-            <div class="flex gap-6 items-start">
-                <div class="w-10 h-10 shrink-0 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center font-black text-violet-400">1</div>
-                <div class="pt-1">
-                    <h3 class="font-bold text-white mb-1">X hesabınla giriş yap</h3>
-                    <p class="text-gray-500 text-sm leading-relaxed">Twitter OAuth ile güvenli giriş. Sadece bookmark okuma izni istenir, başka bir şey erişmeyiz.</p>
+        <div class="space-y-2">
+            <div class="reveal step-line flex gap-5 pb-8" data-delay="0">
+                <div class="w-10 h-10 shrink-0 rounded-xl bg-violet-600/15 border border-violet-500/20 flex items-center justify-center font-bold text-violet-400 text-sm">1</div>
+                <div class="pt-2">
+                    <h3 class="font-semibold text-white text-sm mb-1">Sign in with X</h3>
+                    <p class="text-gray-600 text-xs leading-relaxed">One click, OAuth2 authentication. We only request read-only bookmark access — nothing else.</p>
                 </div>
             </div>
 
-            <div class="flex gap-6 items-start">
-                <div class="w-10 h-10 shrink-0 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center font-black text-violet-400">2</div>
-                <div class="pt-1">
-                    <h3 class="font-bold text-white mb-1">Sync et, AI çalışsın</h3>
-                    <p class="text-gray-500 text-sm leading-relaxed">Bir butona bas. AI tüm bookmark'larını analiz eder, kategorize eder, önceliklendirir. Saniyeler içinde.</p>
+            <div class="reveal step-line flex gap-5 pb-8" data-delay="80">
+                <div class="w-10 h-10 shrink-0 rounded-xl bg-violet-600/15 border border-violet-500/20 flex items-center justify-center font-bold text-violet-400 text-sm">2</div>
+                <div class="pt-2">
+                    <h3 class="font-semibold text-white text-sm mb-1">Sync your bookmarks</h3>
+                    <p class="text-gray-600 text-xs leading-relaxed">Hit sync. AI reads and analyzes every bookmark — categorizing, scoring, and summarizing in seconds.</p>
                 </div>
             </div>
 
-            <div class="flex gap-6 items-start">
-                <div class="w-10 h-10 shrink-0 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center font-black text-violet-400">3</div>
-                <div class="pt-1">
-                    <h3 class="font-bold text-white mb-1">Aksiyon al</h3>
-                    <p class="text-gray-500 text-sm leading-relaxed">Her bookmark için ne yapman gerektiğini gör. Oku, uygula, tamamlandı olarak işaretle.</p>
+            <div class="reveal flex gap-5" data-delay="160">
+                <div class="w-10 h-10 shrink-0 rounded-xl bg-violet-600/15 border border-violet-500/20 flex items-center justify-center font-bold text-violet-400 text-sm">3</div>
+                <div class="pt-2">
+                    <h3 class="font-semibold text-white text-sm mb-1">Take action</h3>
+                    <p class="text-gray-600 text-xs leading-relaxed">Browse your organized library. Click any bookmark for deep analysis, roadmap, and next steps.</p>
                 </div>
             </div>
         </div>
@@ -279,34 +310,60 @@
 </section>
 
 <!-- CTA -->
-<section class="border-t border-white/5">
-    <div class="max-w-2xl mx-auto px-6 py-32 text-center">
-        <h2 class="text-4xl md:text-5xl font-black tracking-tight mb-6">
-            Bookmark karmaşana<br><span class="gradient-text">son ver.</span>
-        </h2>
-        <p class="text-gray-500 mb-10 text-lg">Ücretsiz başla, birkaç dakikada tüm bookmark'ların düzenli.</p>
+<section class="border-t border-white/[0.05]">
+    <div class="relative max-w-3xl mx-auto px-6 py-28 text-center overflow-hidden">
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div class="w-96 h-96 rounded-full bg-violet-600/8 blur-[80px]"></div>
+        </div>
+        <div class="relative">
+            <h2 class="reveal text-4xl md:text-5xl font-black tracking-tight mb-4">
+                Your bookmarks are<br><span class="gradient-text">waiting to be used.</span>
+            </h2>
+            <p class="reveal text-gray-600 mb-10 text-sm" data-delay="80">Start for free. No credit card. Takes 30 seconds.</p>
 
-        {% if logged_in %}
-        <a href="/dashboard"
-           class="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-bold px-10 py-4 rounded-xl transition text-lg">
-            Dashboard →
-        </a>
-        {% else %}
-        <a href="/auth/login"
-           class="inline-flex items-center gap-3 bg-white hover:bg-gray-100 text-black font-bold px-10 py-4 rounded-xl transition text-lg">
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            X ile Ücretsiz Başla
-        </a>
-        {% endif %}
+            {% if logged_in %}
+            <div class="reveal" data-delay="160">
+                <a href="/dashboard" class="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-semibold px-8 py-3.5 rounded-xl transition text-sm">
+                    Open Dashboard →
+                </a>
+            </div>
+            {% else %}
+            <div class="reveal" data-delay="160">
+                <a href="/auth/login" class="inline-flex items-center gap-2.5 bg-white hover:bg-gray-50 text-black font-bold px-8 py-3.5 rounded-xl transition text-sm">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    Get started for free
+                </a>
+            </div>
+            {% endif %}
+        </div>
     </div>
 </section>
 
 <!-- Footer -->
-<footer class="border-t border-white/5">
-    <div class="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <span class="font-bold text-gray-600">dotmark</span>
-        <p class="text-gray-700 text-sm">© 2025 Dotmark. Tüm hakları saklıdır.</p>
+<footer class="border-t border-white/[0.05]">
+    <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+            <div class="w-5 h-5 rounded bg-violet-600 flex items-center justify-center">
+                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+            </div>
+            <span class="text-gray-700 text-xs font-semibold">dotmark</span>
+        </div>
+        <p class="text-gray-800 text-xs">© 2025 Dotmark. All rights reserved.</p>
     </div>
 </footer>
+
+<script>
+    // Reveal on scroll
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const delay = entry.target.dataset.delay || 0;
+                setTimeout(() => entry.target.classList.add('visible'), parseInt(delay));
+                revealObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+</script>
 
 {% endblock %}

@@ -1,58 +1,105 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dotmark — Bookmark'larını Çalıştır</title>
-    <meta name="description" content="Twitter bookmark'larını AI ile analiz et, kategorize et, ne yapman gerektiğini öğren.">
+    <title>Dotmark — Turn Bookmarks Into Action</title>
+    <meta name="description" content="AI-powered Twitter bookmark manager. Analyze, categorize, and act on everything you save.">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: {
-                        gray: { 950: '#08080f' }
-                    },
-                    animation: {
-                        'fade-up': 'fadeUp 0.6s ease forwards',
-                        'pulse-slow': 'pulse 4s cubic-bezier(0.4,0,0.6,1) infinite',
-                    },
-                    keyframes: {
-                        fadeUp: {
-                            '0%': { opacity: '0', transform: 'translateY(20px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        }
-                    }
+                    colors: { gray: { 950: '#070709' } },
+                    fontFamily: { sans: ['Inter var', 'Inter', 'sans-serif'] }
                 }
             }
         }
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        * { font-family: 'Inter', sans-serif; }
+        * { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+
+        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
         .gradient-text {
-            background: linear-gradient(135deg, #fff 0%, #a78bfa 50%, #60a5fa 100%);
+            background: linear-gradient(120deg, #e2e8f0 0%, #a78bfa 45%, #818cf8 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        .glow {
-            box-shadow: 0 0 80px rgba(139, 92, 246, 0.15), 0 0 30px rgba(96, 165, 250, 0.1);
+
+        .hero-glow {
+            position: absolute;
+            width: 700px; height: 700px;
+            background: radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -60%);
+            pointer-events: none;
         }
-        .card-glow:hover {
-            box-shadow: 0 0 30px rgba(139, 92, 246, 0.1);
-            border-color: rgba(139, 92, 246, 0.3) !important;
+
+        .card-border {
+            background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(255,255,255,0.07);
+            transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .noise {
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+        .card-border:hover {
+            border-color: rgba(139,92,246,0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(124,58,237,0.06);
         }
-        .delay-100 { animation-delay: 0.1s; }
-        .delay-200 { animation-delay: 0.2s; }
-        .delay-300 { animation-delay: 0.3s; }
-        .opacity-0 { opacity: 0; }
+
+        .shimmer {
+            background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2.5s infinite;
+        }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+        .dot-pulse { animation: dotPulse 2s ease-in-out infinite; }
+        @keyframes dotPulse { 0%,100%{opacity:0.4;transform:scale(1)} 50%{opacity:1;transform:scale(1.2)} }
+
+        .float { animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+        .noise::after {
+            content: '';
+            position: fixed; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .tag-pill {
+            display: inline-flex; align-items: center;
+            font-size: 11px; font-weight: 500;
+            padding: 3px 8px; border-radius: 6px;
+        }
+
+        /* Scroll line animation */
+        .step-line { position: relative; }
+        .step-line::before {
+            content: '';
+            position: absolute; left: 19px; top: 40px;
+            width: 1px; height: calc(100% + 8px);
+            background: linear-gradient(to bottom, rgba(139,92,246,0.3), transparent);
+        }
     </style>
 </head>
-<body class="bg-gray-950 text-white min-h-screen">
+<body class="bg-gray-950 text-white min-h-screen noise">
     {% block content %}{% endblock %}
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((e, i) => {
+                if (e.isIntersecting) {
+                    setTimeout(() => e.target.classList.add('visible'), e.target.dataset.delay || 0);
+                }
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    </script>
 </body>
 </html>
