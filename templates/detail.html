@@ -1,0 +1,602 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+
+    <!-- Back + Action bar -->
+    <div class="flex items-center justify-between mb-8">
+        <a href="/dashboard" class="inline-flex items-center gap-2 text-gray-500 hover:text-white text-sm transition">
+            ← Dashboard
+        </a>
+        <div class="flex items-center gap-2">
+            <!-- X'te aç -->
+            <a href="https://x.com/i/web/status/{{ bm.tweet_id }}" target="_blank"
+               class="px-3 py-1.5 rounded-lg text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 transition flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                X'te Aç
+            </a>
+            <!-- Dışa aktar -->
+            <a href="/bookmark/{{ bm.tweet_id }}/export"
+               class="px-3 py-1.5 rounded-lg text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 transition">
+                ↓ Markdown
+            </a>
+            <!-- MVP Prompt -->
+            <button onclick="openMvpModal()"
+               class="px-3 py-1.5 rounded-lg text-xs bg-violet-500/20 hover:bg-violet-500/30 text-violet-400 border border-violet-500/30 transition font-medium">
+                🚀 MVP Prompt
+            </button>
+            <!-- Yeniden analiz -->
+            <button onclick="reanalyze()"
+               class="px-3 py-1.5 rounded-lg text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 transition" id="reanalyzeBtn">
+                ↻ Yeniden Analiz
+            </button>
+            <!-- Okudum -->
+            <button onclick="toggleRead()" id="readBtn"
+               class="px-4 py-1.5 rounded-lg text-xs font-medium transition
+                      {% if bm.is_read %}bg-emerald-500/20 text-emerald-400 border border-emerald-500/30
+                      {% else %}bg-gray-800 hover:bg-emerald-500/20 text-gray-400 hover:text-emerald-400{% endif %}">
+                {% if bm.is_read %}✓ Okundu{% else %}Okudum{% endif %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Header badges -->
+    <div class="flex flex-wrap gap-2 mb-4">
+        <span class="text-xs px-2 py-1 rounded-md font-medium
+            {% if bm.content_type == 'Tutorial' %}bg-blue-500/20 text-blue-400
+            {% elif bm.content_type == 'Tool' %}bg-purple-500/20 text-purple-400
+            {% elif bm.content_type == 'Tip' %}bg-green-500/20 text-green-400
+            {% elif bm.content_type == 'Thread' %}bg-orange-500/20 text-orange-400
+            {% elif bm.content_type == 'Resource' %}bg-yellow-500/20 text-yellow-400
+            {% else %}bg-gray-700 text-gray-400{% endif %}">
+            {{ bm.content_type }}
+        </span>
+        <span id="difficultyBadge" class="text-xs px-2 py-1 rounded-md
+            {% if bm.difficulty == 'Beginner' %}bg-emerald-900/40 text-emerald-400
+            {% elif bm.difficulty == 'Advanced' %}bg-red-900/40 text-red-400
+            {% else %}bg-gray-800 text-gray-400{% endif %}">
+            {{ bm.difficulty }}
+        </span>
+        <span id="categoryBadge" class="text-xs px-2 py-1 rounded-md bg-gray-800 text-gray-400">{{ bm.category }}</span>
+        {% if bm.subcategory %}<span class="text-xs px-2 py-1 rounded-md bg-gray-800 text-gray-500">{{ bm.subcategory }}</span>{% endif %}
+        {% if not bm.is_evergreen %}<span class="text-xs px-2 py-1 rounded-md bg-amber-900/30 text-amber-500">⏱ Güncel</span>{% endif %}
+        {% if bm.read_at %}<span class="text-xs text-gray-600 self-center">Okundu: {{ bm.read_at[:10] }}</span>{% endif %}
+    </div>
+
+    <h1 class="text-xl font-bold text-white mb-6 leading-relaxed">{{ bm.summary or bm.text[:120] }}</h1>
+
+    <!-- Edit bar -->
+    <div id="editBar" class="hidden mb-6 bg-gray-900 border border-sky-800/50 rounded-xl p-4">
+        <p class="text-xs text-gray-500 mb-3 uppercase tracking-wider">Düzenle</p>
+        <div class="flex flex-wrap gap-3 items-end">
+            <div>
+                <label class="text-xs text-gray-500 block mb-1">Kategori</label>
+                <select id="editCategory" class="bg-gray-800 text-white text-sm rounded-lg px-3 py-1.5 border border-gray-700">
+                    {% for cat in ["iOS","Android","Flutter","React Native","Backend","DevOps","AI/ML","Design","Career","Tools","Web","Security","Other"] %}
+                    <option value="{{ cat }}" {% if cat == bm.category %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 block mb-1">Zorluk</label>
+                <select id="editDifficulty" class="bg-gray-800 text-white text-sm rounded-lg px-3 py-1.5 border border-gray-700">
+                    {% for d in ["Beginner","Intermediate","Advanced"] %}
+                    <option value="{{ d }}" {% if d == bm.difficulty %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 block mb-1">Öncelik</label>
+                <select id="editPriority" class="bg-gray-800 text-white text-sm rounded-lg px-3 py-1.5 border border-gray-700">
+                    {% for i in [1,2,3,4,5] %}
+                    <option value="{{ i }}" {% if i == bm.priority %}selected{% endif %}>{{ i }} ★</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button onclick="saveEdit()" class="bg-sky-500 hover:bg-sky-400 text-white text-sm px-4 py-1.5 rounded-lg transition">Kaydet</button>
+            <button onclick="toggleEdit()" class="text-gray-500 text-sm px-3 py-1.5">İptal</button>
+        </div>
+    </div>
+    <button onclick="toggleEdit()" class="text-xs text-gray-600 hover:text-gray-400 mb-6 transition">✎ Düzenle</button>
+
+    <!-- Two columns -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Main (2/3) -->
+        <div class="lg:col-span-2 space-y-5">
+
+            <!-- Original tweet -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Orijinal Tweet</h2>
+                <p class="text-gray-300 text-sm leading-relaxed">{{ bm.text }}</p>
+            </div>
+
+            {% if analysis %}
+
+            {% if analysis.detailed_summary %}
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Detaylı Özet</h2>
+                <p class="text-gray-300 text-sm leading-relaxed">{{ analysis.detailed_summary }}</p>
+            </div>
+            {% endif %}
+
+            {% if analysis.why_it_matters %}
+            <div class="bg-sky-950/40 border border-sky-900/50 rounded-xl p-5">
+                <h2 class="text-xs font-semibold text-sky-500 uppercase tracking-wider mb-3">💡 Neden Önemli?</h2>
+                <p class="text-gray-300 text-sm leading-relaxed">{{ analysis.why_it_matters }}</p>
+            </div>
+            {% endif %}
+
+            {% if analysis.what_to_do %}
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">✅ Ne Yapmalısın?</h2>
+                <div class="space-y-3">
+                    {% for step in analysis.what_to_do %}
+                    <div class="flex gap-4">
+                        <div class="w-6 h-6 rounded-full bg-sky-500/20 text-sky-400 text-xs flex items-center justify-center shrink-0 mt-0.5 font-bold">{{ step.step }}</div>
+                        <div>
+                            <p class="text-sm font-medium text-white">{{ step.action }}</p>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ step.detail }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Roadmap with checkboxes -->
+            {% if analysis.roadmap %}
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <div class="flex items-center justify-between mb-5">
+                    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">🗺️ Öğrenme Yol Haritası</h2>
+                    <div class="flex items-center gap-2">
+                        <div class="h-1.5 w-24 bg-gray-800 rounded-full overflow-hidden">
+                            <div id="progressBar" class="h-full bg-sky-500 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                        <span id="progressText" class="text-xs text-gray-500">%0</span>
+                    </div>
+                </div>
+                <div class="relative">
+                    <div class="absolute left-3 top-0 bottom-0 w-px bg-gray-800"></div>
+                    <div class="space-y-6" id="roadmapContainer">
+                        {% for phase in analysis.roadmap %}
+                        <div class="relative pl-10">
+                            <div class="absolute left-0 top-0.5 w-6 h-6 rounded-full border-2 border-sky-500 bg-gray-950 flex items-center justify-center">
+                                <div class="w-2 h-2 rounded-full bg-sky-500"></div>
+                            </div>
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-sm font-semibold text-white">{{ phase.phase }}</h3>
+                                {% if phase.duration %}<span class="text-xs text-gray-600 bg-gray-800 px-2 py-0.5 rounded">{{ phase.duration }}</span>{% endif %}
+                            </div>
+                            <ul class="space-y-2">
+                                {% for step in phase.steps %}
+                                {% set key = loop.index0 | string + '-' + loop.index0 | string %}
+                                <li class="flex items-start gap-2">
+                                    <input type="checkbox"
+                                           data-phase="{{ loop.revindex }}"
+                                           data-step="{{ loop.index0 }}"
+                                           onchange="updateProgress(this)"
+                                           class="mt-0.5 rounded accent-sky-500 cursor-pointer shrink-0"
+                                           id="cb-{{ loop.revindex }}-{{ loop.index0 }}">
+                                    <label for="cb-{{ loop.revindex }}-{{ loop.index0 }}"
+                                           class="text-xs text-gray-400 cursor-pointer leading-relaxed step-label">{{ step }}</label>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if analysis.connection_to_similar %}
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">🔗 Diğer Bookmark'larla Bağlantı</h2>
+                <p class="text-gray-400 text-sm leading-relaxed">{{ analysis.connection_to_similar }}</p>
+            </div>
+            {% endif %}
+
+            {% endif %}
+
+            <!-- Personal notes -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">📝 Notlarım</h2>
+                <textarea id="notesArea" rows="4" placeholder="Kendi notlarını buraya yaz..."
+                    class="w-full bg-gray-800 text-gray-300 text-sm rounded-lg p-3 border border-gray-700 focus:border-sky-600 outline-none resize-none placeholder-gray-600">{{ bm.notes or '' }}</textarea>
+                <div class="flex items-center justify-between mt-2">
+                    <span id="notesSaved" class="text-xs text-gray-600"></span>
+                    <button onclick="saveNotes()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 px-3 py-1.5 rounded-lg transition">Kaydet</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Sidebar (1/3) -->
+        <div class="space-y-4">
+
+            {% if bm.key_points %}
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Ana Noktalar</h2>
+                <ul class="space-y-2">
+                    {% for point in bm.key_points %}
+                    <li class="text-xs text-gray-400 flex gap-2"><span class="text-sky-500 shrink-0 mt-0.5">▸</span>{{ point }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if analysis and analysis.prerequisites %}
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Önkoşullar</h2>
+                <ul class="space-y-1">
+                    {% for pre in analysis.prerequisites %}
+                    <li class="text-xs text-gray-400 flex gap-2"><span class="text-gray-600">•</span>{{ pre }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if analysis and analysis.resources %}
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Kaynaklar</h2>
+                <ul class="space-y-1">
+                    {% for res in analysis.resources %}
+                    <li class="text-xs text-gray-400 flex gap-2"><span class="text-yellow-600 shrink-0">→</span>{{ res }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if bm.tags %}
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Etiketler</h2>
+                <div class="flex flex-wrap gap-1">
+                    {% for tag in bm.tags %}<span class="text-xs bg-gray-800 text-gray-500 px-2 py-0.5 rounded-md">#{{ tag }}</span>{% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Öncelik</h2>
+                <div class="flex gap-0.5">
+                    {% for i in range(bm.priority) %}<span class="text-yellow-400 text-lg">★</span>{% endfor %}
+                    {% for i in range(5 - bm.priority) %}<span class="text-gray-800 text-lg">★</span>{% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Similar bookmarks -->
+    {% if similar %}
+    <div class="mt-12">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-5">Benzer Bookmark'lar — {{ bm.category }}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for s in similar %}
+            <a href="/bookmark/{{ s.tweet_id }}"
+               class="bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-xl p-4 transition flex flex-col gap-2 group">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs px-2 py-0.5 rounded-md bg-gray-800 text-gray-500">{{ s.content_type }}</span>
+                    {% if s.is_read %}<span class="text-xs text-emerald-600">✓</span>{% endif %}
+                </div>
+                <p class="text-sm text-white group-hover:text-sky-400 transition leading-snug">{{ s.summary or s.text[:100] }}</p>
+                <div class="flex flex-wrap gap-1 mt-auto">
+                    {% for tag in s.tags[:3] %}<span class="text-xs text-gray-600">#{{ tag }}</span>{% endfor %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- MVP Modal -->
+<div id="mvpModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeMvpModal()"></div>
+    <div class="relative bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-800 shrink-0">
+            <div class="flex items-center gap-3">
+                <span class="text-lg">🚀</span>
+                <div>
+                    <h2 id="mvpModalTitle" class="font-semibold text-white text-sm">MVP Promptu Hazırlanıyor</h2>
+                    <div class="flex gap-2 mt-1">
+                        <span id="step1dot" class="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
+                        <span id="step2dot" class="w-1.5 h-1.5 rounded-full bg-gray-700"></span>
+                        <span id="step3dot" class="w-1.5 h-1.5 rounded-full bg-gray-700"></span>
+                    </div>
+                </div>
+            </div>
+            <button onclick="closeMvpModal()" class="text-gray-500 hover:text-white text-xl leading-none px-2">×</button>
+        </div>
+
+        <!-- Step 1: Analyzing -->
+        <div id="mvpStep1" class="flex flex-col items-center justify-center py-16 gap-4">
+            <div class="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-gray-400 text-sm">Claude projeyi analiz ediyor...</p>
+        </div>
+
+        <!-- Step 2: Questions -->
+        <div id="mvpStep2" class="hidden flex-1 overflow-y-auto">
+            <div class="px-6 py-5">
+                <p id="projectSummary" class="text-sm text-gray-400 mb-5 pb-4 border-b border-gray-800"></p>
+                <div id="questionsContainer" class="space-y-5"></div>
+                <button onclick="submitAnswers()"
+                    class="mt-6 w-full bg-violet-500 hover:bg-violet-400 text-white py-2.5 rounded-xl text-sm font-medium transition">
+                    Prompt Oluştur →
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Generating -->
+        <div id="mvpStep3" class="hidden flex flex-col items-center justify-center py-16 gap-4">
+            <div class="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-gray-400 text-sm">Detaylı MVP promptu oluşturuluyor...</p>
+        </div>
+
+        <!-- Step 4: Result -->
+        <div id="mvpStep4" class="hidden flex-1 overflow-y-auto flex-col">
+            <div class="px-4 py-3 border-b border-gray-800 flex items-center justify-between shrink-0">
+                <p class="text-xs text-gray-500">Claude Code veya herhangi bir AI asistanına yapıştır</p>
+                <button onclick="copyPrompt()" id="copyBtn"
+                    class="px-3 py-1.5 rounded-lg text-xs bg-violet-500/20 hover:bg-violet-500/30 text-violet-400 border border-violet-500/30 transition">
+                    📋 Kopyala
+                </button>
+            </div>
+            <pre id="mvpText" class="p-5 text-xs text-gray-300 whitespace-pre-wrap leading-relaxed overflow-y-auto flex-1"></pre>
+        </div>
+
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-6 right-6 hidden bg-gray-800 border border-gray-700 text-white px-4 py-3 rounded-xl text-sm shadow-xl">
+    <span id="toastMsg"></span>
+</div>
+
+<script>
+const TWEET_ID = "{{ bm.tweet_id }}";
+const savedProgress = {{ bm.roadmap_progress | tojson }};
+
+// Restore roadmap progress
+document.addEventListener("DOMContentLoaded", () => {
+    const checkboxes = document.querySelectorAll("[data-phase]");
+    checkboxes.forEach(cb => {
+        const key = cb.dataset.phase + "-" + cb.dataset.step;
+        if (savedProgress[key]) {
+            cb.checked = true;
+            cb.closest("li").querySelector(".step-label").classList.add("line-through", "text-gray-600");
+        }
+    });
+    recalcProgress();
+});
+
+function recalcProgress() {
+    const all = document.querySelectorAll("[data-phase]");
+    const done = document.querySelectorAll("[data-phase]:checked");
+    const pct = all.length ? Math.round((done.length / all.length) * 100) : 0;
+    document.getElementById("progressBar").style.width = pct + "%";
+    document.getElementById("progressText").textContent = "%" + pct;
+}
+
+async function updateProgress(cb) {
+    const label = cb.closest("li").querySelector(".step-label");
+    if (cb.checked) {
+        label.classList.add("line-through", "text-gray-600");
+    } else {
+        label.classList.remove("line-through", "text-gray-600");
+    }
+    recalcProgress();
+
+    const progress = {};
+    document.querySelectorAll("[data-phase]").forEach(c => {
+        progress[c.dataset.phase + "-" + c.dataset.step] = c.checked;
+    });
+    await fetch(`/bookmark/${TWEET_ID}/progress`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(progress),
+    });
+}
+
+async function toggleRead() {
+    const res = await fetch(`/bookmark/${TWEET_ID}/read`, { method: "POST" });
+    const data = await res.json();
+    const btn = document.getElementById("readBtn");
+    if (data.is_read) {
+        btn.textContent = "✓ Okundu";
+        btn.className = btn.className.replace("bg-gray-800 hover:bg-emerald-500/20 text-gray-400 hover:text-emerald-400", "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30");
+    } else {
+        btn.textContent = "Okudum";
+        btn.className = btn.className.replace("bg-emerald-500/20 text-emerald-400 border border-emerald-500/30", "bg-gray-800 hover:bg-emerald-500/20 text-gray-400 hover:text-emerald-400");
+    }
+    showToast(data.is_read ? "✓ Okundu olarak işaretlendi" : "Okunmadı olarak işaretlendi");
+}
+
+async function saveNotes() {
+    const notes = document.getElementById("notesArea").value;
+    const fd = new FormData();
+    fd.append("notes", notes);
+    await fetch(`/bookmark/${TWEET_ID}/notes`, { method: "POST", body: fd });
+    document.getElementById("notesSaved").textContent = "Kaydedildi ✓";
+    setTimeout(() => document.getElementById("notesSaved").textContent = "", 2000);
+}
+
+async function reanalyze() {
+    const btn = document.getElementById("reanalyzeBtn");
+    btn.textContent = "Analiz ediliyor...";
+    btn.disabled = true;
+    await fetch(`/bookmark/${TWEET_ID}/reanalyze`, { method: "POST" });
+    showToast("✓ Analiz güncellendi, sayfa yenileniyor...");
+    setTimeout(() => window.location.reload(), 1500);
+}
+
+function toggleEdit() {
+    const bar = document.getElementById("editBar");
+    bar.classList.toggle("hidden");
+}
+
+async function saveEdit() {
+    const fd = new FormData();
+    fd.append("category", document.getElementById("editCategory").value);
+    fd.append("difficulty", document.getElementById("editDifficulty").value);
+    fd.append("priority", document.getElementById("editPriority").value);
+    await fetch(`/bookmark/${TWEET_ID}/edit`, { method: "POST", body: fd });
+    showToast("✓ Kaydedildi");
+    toggleEdit();
+    document.getElementById("categoryBadge").textContent = fd.get("category");
+}
+
+// MVP Modal
+let cachedPrompt = {{ bm.mvp_prompt | tojson }};
+let mvpProjectType = "mobile";
+let mvpQuestions = [];
+
+function setStep(n) {
+    [1,2,3,4].forEach(i => {
+        document.getElementById(`mvpStep${i}`).classList.add("hidden");
+        document.getElementById(`mvpStep${i}`).classList.remove("flex");
+    });
+    const el = document.getElementById(`mvpStep${n}`);
+    el.classList.remove("hidden");
+    if (n === 1 || n === 3) el.classList.add("flex");
+
+    // Dots
+    [1,2,3].forEach(i => {
+        const dot = document.getElementById(`step${i}dot`);
+        dot.className = `w-1.5 h-1.5 rounded-full ${i <= Math.min(n, 3) ? 'bg-violet-500' : 'bg-gray-700'}`;
+    });
+
+    const titles = {
+        1: "Proje Analiz Ediliyor...",
+        2: "Birkaç Soru",
+        3: "Prompt Oluşturuluyor...",
+        4: "MVP Promptu Hazır"
+    };
+    document.getElementById("mvpModalTitle").textContent = titles[n];
+}
+
+async function openMvpModal() {
+    document.getElementById("mvpModal").classList.remove("hidden");
+    document.getElementById("mvpModal").classList.add("flex");
+
+    if (cachedPrompt) {
+        setStep(4);
+        document.getElementById("mvpText").textContent = cachedPrompt;
+        return;
+    }
+
+    setStep(1);
+
+    try {
+        const res = await fetch(`/bookmark/${TWEET_ID}/mvp-questions`, { method: "POST" });
+        const data = await res.json();
+        mvpProjectType = data.project_type || "mobile";
+        mvpQuestions = data.questions || [];
+        renderQuestions(data);
+        setStep(2);
+    } catch(e) {
+        showToast("✗ Hata oluştu");
+        closeMvpModal();
+    }
+}
+
+function renderQuestions(data) {
+    document.getElementById("projectSummary").textContent = data.project_summary || "";
+    const container = document.getElementById("questionsContainer");
+    container.innerHTML = "";
+
+    data.questions.forEach((q, idx) => {
+        const div = document.createElement("div");
+        div.className = "space-y-2";
+
+        const label = `<div>
+            <p class="text-sm font-medium text-white">${q.question}</p>
+            <p class="text-xs text-gray-600 mt-0.5">${q.why}</p>
+        </div>`;
+
+        let input = "";
+        if (q.type === "radio" && q.options) {
+            const opts = q.options.map(opt =>
+                `<button type="button" onclick="selectRadio('${q.id}', '${opt}', this)"
+                    data-value="${opt}"
+                    class="radio-opt px-3 py-1.5 rounded-lg text-xs border border-gray-700 text-gray-400 hover:border-violet-500 hover:text-violet-400 transition ${opt === q.default ? 'border-violet-500 text-violet-400 bg-violet-500/10 selected' : ''}">
+                    ${opt}
+                </button>`
+            ).join("");
+            input = `<div class="flex flex-wrap gap-2" id="radio_${q.id}">${opts}</div>
+                     <input type="hidden" id="${q.id}" value="${q.default || (q.options[0] || '')}">`;
+        } else if (q.type === "select" && q.options) {
+            const opts = q.options.map(opt =>
+                `<option value="${opt}" ${opt === q.default ? 'selected' : ''}>${opt}</option>`
+            ).join("");
+            input = `<select id="${q.id}" class="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:border-violet-500 outline-none">
+                ${opts}
+            </select>`;
+        } else {
+            input = `<input type="text" id="${q.id}" value="${q.default || ''}" placeholder="Cevabınız..."
+                class="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:border-violet-500 outline-none placeholder-gray-600">`;
+        }
+
+        div.innerHTML = label + input;
+        container.appendChild(div);
+    });
+}
+
+function selectRadio(questionId, value, btn) {
+    document.getElementById(questionId).value = value;
+    const group = document.getElementById(`radio_${questionId}`);
+    group.querySelectorAll(".radio-opt").forEach(b => {
+        b.className = b.className
+            .replace(" border-violet-500 text-violet-400 bg-violet-500/10 selected", "")
+            + (b === btn ? " border-violet-500 text-violet-400 bg-violet-500/10 selected" : "");
+    });
+}
+
+async function submitAnswers() {
+    const answers = {};
+    mvpQuestions.forEach(q => {
+        const el = document.getElementById(q.id);
+        if (el) answers[q.question] = el.value;
+    });
+
+    setStep(3);
+
+    try {
+        const res = await fetch(`/bookmark/${TWEET_ID}/mvp-prompt`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ answers, project_type: mvpProjectType }),
+        });
+        const data = await res.json();
+        cachedPrompt = data.prompt;
+        document.getElementById("mvpText").textContent = cachedPrompt;
+        setStep(4);
+    } catch(e) {
+        showToast("✗ Hata oluştu");
+        closeMvpModal();
+    }
+}
+
+function closeMvpModal() {
+    document.getElementById("mvpModal").classList.add("hidden");
+    document.getElementById("mvpModal").classList.remove("flex");
+}
+
+async function copyPrompt() {
+    await navigator.clipboard.writeText(cachedPrompt || "");
+    const btn = document.getElementById("copyBtn");
+    btn.textContent = "✓ Kopyalandı";
+    setTimeout(() => btn.textContent = "📋 Kopyala", 2000);
+}
+
+function showToast(msg, duration = 3000) {
+    const toast = document.getElementById("toast");
+    document.getElementById("toastMsg").textContent = msg;
+    toast.classList.remove("hidden");
+    setTimeout(() => toast.classList.add("hidden"), duration);
+}
+</script>
+{% endblock %}

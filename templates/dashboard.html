@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-2xl font-bold">Bookmark'larım</h1>
+            <p class="text-gray-500 text-sm mt-1">{{ total }} bookmark</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button id="syncBtn" onclick="syncBookmarks()"
+                class="bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                <span id="syncIcon">↻</span>
+                <span id="syncText">Sync Et</span>
+            </button>
+            <a href="/logout" class="text-gray-500 hover:text-white text-sm transition">Çıkış</a>
+        </div>
+    </div>
+
+    {% if not categories %}
+    <div class="flex flex-col items-center justify-center py-32 text-center">
+        <div class="text-5xl mb-4">📭</div>
+        <p class="text-gray-400 text-lg mb-6">Henüz bookmark yok</p>
+        <button onclick="syncBookmarks()"
+            class="bg-sky-500 hover:bg-sky-400 text-white px-6 py-3 rounded-xl font-medium transition">
+            Bookmark'ları Getir
+        </button>
+    </div>
+
+    {% else %}
+
+    <!-- Filters -->
+    <div class="flex flex-wrap gap-2 mb-6">
+        <button onclick="filterCategory('all')" data-cat="all"
+            class="cat-tab px-3 py-1.5 rounded-lg text-sm font-medium bg-sky-500 text-white transition">
+            Tümü ({{ total }})
+        </button>
+        {% for category, items in categories.items() %}
+        <button onclick="filterCategory('{{ category }}')" data-cat="{{ category }}"
+            class="cat-tab px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-800 hover:bg-gray-700 text-gray-300 transition">
+            {{ category }} ({{ items|length }})
+        </button>
+        {% endfor %}
+    </div>
+
+    <!-- Content type filter -->
+    <div class="flex flex-wrap gap-2 mb-8">
+        <span class="text-xs text-gray-600 self-center mr-1">Tür:</span>
+        {% for ctype in ["Tutorial", "Tool", "Article", "Thread", "Tip", "Resource"] %}
+        <button onclick="filterType('{{ ctype }}')" data-type="{{ ctype }}"
+            class="type-tab px-2 py-1 rounded-md text-xs font-medium bg-gray-900 border border-gray-700 hover:border-gray-500 text-gray-400 transition">
+            {{ ctype }}
+        </button>
+        {% endfor %}
+        <button onclick="filterType('all')" data-type="all"
+            class="px-2 py-1 rounded-md text-xs text-gray-600 hover:text-gray-400 transition">
+            Temizle
+        </button>
+    </div>
+
+    <!-- Bookmarks grid -->
+    {% for category, items in categories.items() %}
+    <div class="category-section mb-10" data-category="{{ category }}">
+        <h2 class="text-sm font-semibold text-gray-500 mb-4 uppercase tracking-widest">{{ category }}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for bm in items %}
+            <a href="/bookmark/{{ bm.tweet_id }}"
+               class="bookmark-card bg-gray-900 border border-gray-800 hover:border-sky-800 rounded-xl p-4 transition flex flex-col gap-3 cursor-pointer group"
+               data-type="{{ bm.content_type or 'Article' }}">
+
+                <!-- Top badges -->
+                <div class="flex items-center gap-2 flex-wrap">
+                    {% if bm.is_read %}<span class="text-xs text-emerald-600 font-medium">✓ Okundu</span>{% endif %}
+                    <span class="content-type-badge text-xs px-2 py-0.5 rounded-md font-medium
+                        {% if bm.content_type == 'Tutorial' %}bg-blue-500/20 text-blue-400
+                        {% elif bm.content_type == 'Tool' %}bg-purple-500/20 text-purple-400
+                        {% elif bm.content_type == 'Tip' %}bg-green-500/20 text-green-400
+                        {% elif bm.content_type == 'Thread' %}bg-orange-500/20 text-orange-400
+                        {% elif bm.content_type == 'Resource' %}bg-yellow-500/20 text-yellow-400
+                        {% else %}bg-gray-700 text-gray-400{% endif %}">
+                        {{ bm.content_type or 'Article' }}
+                    </span>
+
+                    {% if bm.difficulty %}
+                    <span class="text-xs px-2 py-0.5 rounded-md
+                        {% if bm.difficulty == 'Beginner' %}bg-emerald-900/40 text-emerald-400
+                        {% elif bm.difficulty == 'Advanced' %}bg-red-900/40 text-red-400
+                        {% else %}bg-gray-800 text-gray-400{% endif %}">
+                        {{ bm.difficulty }}
+                    </span>
+                    {% endif %}
+
+                    {% if not bm.is_evergreen %}
+                    <span class="text-xs px-2 py-0.5 rounded-md bg-amber-900/30 text-amber-500">⏱ Güncel</span>
+                    {% endif %}
+
+                    {% if bm.action %}
+                    <span class="ml-auto text-xs text-gray-600 font-medium">{{ bm.action }} →</span>
+                    {% endif %}
+                </div>
+
+                <!-- Summary -->
+                {% if bm.summary %}
+                <p class="text-sm font-medium text-white leading-snug">{{ bm.summary }}</p>
+                {% endif %}
+
+                <!-- Key points -->
+                {% if bm.key_points %}
+                <ul class="space-y-1">
+                    {% for point in bm.key_points %}
+                    <li class="text-xs text-gray-400 flex gap-2">
+                        <span class="text-sky-500 shrink-0 mt-0.5">▸</span>
+                        <span>{{ point }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+
+                <!-- Original tweet (collapsed) -->
+                <details class="group">
+                    <summary class="text-xs text-gray-600 cursor-pointer hover:text-gray-400 transition list-none">
+                        Orijinal tweet ▾
+                    </summary>
+                    <p class="text-xs text-gray-600 mt-2 leading-relaxed border-t border-gray-800 pt-2">
+                        {{ bm.text }}
+                    </p>
+                </details>
+
+                <!-- Footer -->
+                <div class="mt-auto flex items-center justify-between pt-1">
+                    <div class="flex flex-wrap gap-1">
+                        {% for tag in bm.tags[:3] %}
+                        <span class="text-xs bg-gray-800 text-gray-500 px-2 py-0.5 rounded-md">#{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="flex items-center gap-0.5 shrink-0 ml-2">
+                        {% for i in range(bm.priority) %}
+                        <span class="text-yellow-400 text-xs">★</span>
+                        {% endfor %}
+                        {% for i in range(5 - bm.priority) %}
+                        <span class="text-gray-800 text-xs">★</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% if bm.subcategory %}
+                <p class="text-xs text-gray-700">{{ bm.subcategory }}</p>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+    {% endif %}
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-6 right-6 hidden bg-gray-800 border border-gray-700 text-white px-4 py-3 rounded-xl text-sm shadow-xl transition">
+    <span id="toastMsg"></span>
+</div>
+
+<script>
+function showToast(msg, duration = 3000) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), duration);
+}
+
+async function syncBookmarks() {
+    const btn = document.getElementById('syncBtn');
+    btn.disabled = true;
+    document.getElementById('syncText').textContent = 'Yükleniyor...';
+
+    try {
+        const res = await fetch('/sync', { method: 'POST' });
+        const data = await res.json();
+        showToast(`✓ ${data.count} bookmark analiz edildi!`);
+        setTimeout(() => window.location.reload(), 1500);
+    } catch (e) {
+        showToast('✗ Hata oluştu, tekrar dene');
+    } finally {
+        btn.disabled = false;
+        document.getElementById('syncText').textContent = 'Sync Et';
+    }
+}
+
+function filterCategory(cat) {
+    document.querySelectorAll('.cat-tab').forEach(tab => {
+        const isActive = tab.dataset.cat === cat;
+        tab.className = tab.className
+            .replace('bg-sky-500 text-white', 'bg-gray-800 text-gray-300 hover:bg-gray-700')
+            .replace('bg-gray-800 text-gray-300 hover:bg-gray-700', 'bg-gray-800 text-gray-300 hover:bg-gray-700');
+        if (isActive) tab.className = tab.className.replace('bg-gray-800 text-gray-300 hover:bg-gray-700', 'bg-sky-500 text-white');
+    });
+
+    document.querySelectorAll('.category-section').forEach(section => {
+        section.style.display = (cat === 'all' || section.dataset.category === cat) ? '' : 'none';
+    });
+}
+
+function filterType(type) {
+    document.querySelectorAll('.bookmark-card').forEach(card => {
+        card.style.display = (type === 'all' || card.dataset.type === type) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}
