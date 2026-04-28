@@ -1,0 +1,17 @@
+name: Keep Render App Alive
+
+on:
+  schedule:
+    # Runs every 14 minutes
+    - cron: "*/14 * * * *"
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping App
+        # Assuming the domain is dotmark.io or dotmark.onrender.com
+        # Using curl to hit the home page to keep the instance warm
+        run: |
+          curl -sSf https://dotmark.io/ > /dev/null || echo "Ping failed, but continuing"
