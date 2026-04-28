@@ -13,7 +13,7 @@ from database import (
     init_db, save_user, get_user_by_id, save_bookmarks, get_bookmarks,
     get_bookmark, get_similar_bookmarks, save_deep_analysis,
     toggle_read, save_notes, save_roadmap_progress, update_bookmark_meta,
-    save_mvp_prompt,
+    save_mvp_prompt, delete_user,
 )
 from ai_service import categorize_bookmarks, deep_analyze, generate_mvp_prompt, generate_mvp_questions
 from x_auth import generate_code_verifier, generate_code_challenge, exchange_code_for_token, get_user_info
@@ -333,6 +333,29 @@ async def export_roadmap(request: Request, tweet_id: str):
         content,
         headers={"Content-Disposition": f"attachment; filename=roadmap-{tweet_id}.md"}
     )
+
+
+@app.get("/privacy", response_class=HTMLResponse)
+async def privacy(request: Request):
+    return templates.TemplateResponse("privacy.html", {"request": request})
+
+
+@app.get("/terms", response_class=HTMLResponse)
+async def terms(request: Request):
+    return templates.TemplateResponse("terms.html", {"request": request})
+
+
+@app.post("/account/delete")
+async def delete_account(request: Request):
+    session = get_session(request)
+    if not session:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    await delete_user(session["user_id"])
+    
+    response = JSONResponse({"ok": True, "message": "Account deleted successfully"})
+    response.delete_cookie("session")
+    return response
 
 
 @app.get("/logout")

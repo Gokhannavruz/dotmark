@@ -14,7 +14,8 @@
                 <span id="syncIcon">↻</span>
                 <span id="syncText">Sync Et</span>
             </button>
-            <a href="/logout" class="text-gray-500 hover:text-white text-sm transition">Çıkış</a>
+            <a href="/logout" class="text-gray-500 hover:text-white text-sm transition px-2 border-r border-gray-700">Çıkış</a>
+            <button onclick="confirmDeleteAccount()" class="text-red-500/70 hover:text-red-500 text-sm transition px-2">Hesabı Sil</button>
         </div>
     </div>
 
@@ -209,6 +210,22 @@ function filterType(type) {
     document.querySelectorAll('.bookmark-card').forEach(card => {
         card.style.display = (type === 'all' || card.dataset.type === type) ? '' : 'none';
     });
+}
+
+async function confirmDeleteAccount() {
+    if (confirm("Hesabını ve tüm verilerini kalıcı olarak silmek istediğinden emin misin? Bu işlem geri alınamaz.")) {
+        try {
+            const res = await fetch('/account/delete', { method: 'POST' });
+            if (res.ok) {
+                window.location.href = '/';
+            } else {
+                const data = await res.json();
+                showToast(`✗ Hata: ${data.error || 'Hesap silinemedi'}`, 6000);
+            }
+        } catch (e) {
+            showToast('✗ Sunucuya bağlanılamadı: ' + e.message, 6000);
+        }
+    }
 }
 </script>
 {% endblock %}

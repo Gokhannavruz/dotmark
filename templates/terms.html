@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Nav -->
+<nav class="fixed top-0 inset-x-0 z-50 h-14 flex items-center border-b border-white/[0.04] backdrop-blur-2xl bg-gray-950/75">
+    <div class="max-w-5xl mx-auto px-6 w-full flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-md bg-sky-500/90 flex items-center justify-center">
+                <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+            </div>
+            <span class="font-semibold text-sm tracking-tight" style="font-family:'DM Sans',sans-serif;">dotmark</span>
+        </a>
+        <a href="/" class="text-xs text-gray-500 hover:text-gray-300 transition">← Back to home</a>
+    </div>
+</nav>
+
+<!-- Content -->
+<main class="pt-24 pb-24 max-w-3xl mx-auto px-6">
+    <div class="mb-12">
+        <p class="text-sky-500/80 text-xs font-medium uppercase tracking-[0.2em] mb-4">Legal</p>
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">Terms of Service</h1>
+        <p class="text-gray-600 text-sm font-light">Last updated: April 28, 2025</p>
+    </div>
+
+    <div class="prose-custom space-y-10">
+
+        <section>
+            <h2>1. Acceptance of Terms</h2>
+            <p>By accessing or using Dotmark ("Service," "we," "us," "our") at <strong>dotmark.io</strong>, you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not use the Service.</p>
+            <p>You must be at least 13 years old to use the Service. By using Dotmark, you represent that you are at least 13 years of age.</p>
+        </section>
+
+        <section>
+            <h2>2. Description of Service</h2>
+            <p>Dotmark is an AI-powered bookmark management tool that connects to your X (formerly Twitter) account via OAuth 2.0 to:</p>
+            <ul>
+                <li>Retrieve your publicly bookmarked tweets (with your authorization).</li>
+                <li>Automatically categorize and analyze bookmarks using AI.</li>
+                <li>Generate action plans, learning roadmaps, and summaries.</li>
+                <li>Allow you to add personal notes and track progress.</li>
+            </ul>
+            <p>The Service is provided "as is" and may be modified, suspended, or discontinued at any time.</p>
+        </section>
+
+        <section>
+            <h2>3. X (Twitter) Account and API Usage</h2>
+            <p>To use Dotmark, you must have a valid X account. By connecting your X account, you:</p>
+            <ul>
+                <li>Authorize Dotmark to access your X bookmarks via the X API with read-only permissions (<code>tweet.read</code>, <code>users.read</code>, <code>bookmark.read</code>).</li>
+                <li>Confirm that your use of X and the content in your bookmarks complies with <a href="https://twitter.com/en/tos" target="_blank" rel="noopener">X's Terms of Service</a>.</li>
+                <li>Understand that Dotmark does not have the ability to post, like, retweet, or modify any content on X on your behalf.</li>
+                <li>Acknowledge that you can revoke access at any time through your <a href="https://twitter.com/settings/connected_apps" target="_blank" rel="noopener">X Connected Apps settings</a>.</li>
+            </ul>
+            <p>Dotmark's use of data obtained from X complies with the <a href="https://developer.twitter.com/en/developer-terms/agreement-and-policy" target="_blank" rel="noopener">X Developer Agreement and Policy</a>.</p>
+        </section>
+
+        <section>
+            <h2>4. User Responsibilities</h2>
+            <p>You agree not to use the Service to:</p>
+            <ul>
+                <li>Violate any applicable local, state, national, or international law or regulation.</li>
+                <li>Infringe upon the intellectual property rights of others.</li>
+                <li>Attempt to gain unauthorized access to any portion of the Service or related systems.</li>
+                <li>Transmit any harmful, offensive, or unlawful content.</li>
+                <li>Circumvent any rate limits, access restrictions, or security features.</li>
+                <li>Use the Service in any manner that could damage, disable, or impair the Service.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>5. Intellectual Property</h2>
+            <p>The Dotmark name, logo, Service design, and all original content created by us (excluding your personal bookmarks and notes) are owned by Dotmark and protected by intellectual property laws.</p>
+            <p>You retain full ownership of your personal data, bookmarks, and notes. By using the Service, you grant us a limited, non-exclusive license to process and store your content solely for the purpose of providing the Service.</p>
+            <p>Content retrieved from X (tweet text, etc.) is owned by the respective X users and is subject to X's terms.</p>
+        </section>
+
+        <section>
+            <h2>6. Privacy</h2>
+            <p>Your use of the Service is also governed by our <a href="/privacy">Privacy Policy</a>, which is incorporated into these Terms by reference. Please review our Privacy Policy to understand our data practices.</p>
+        </section>
+
+        <section>
+            <h2>7. Disclaimer of Warranties</h2>
+            <p>THE SERVICE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.</p>
+            <p>We do not warrant that the Service will be uninterrupted, error-free, or free of viruses or other harmful components. AI-generated analyses and categorizations are provided for informational purposes and may contain errors or inaccuracies.</p>
+        </section>
+
+        <section>
+            <h2>8. Limitation of Liability</h2>
+            <p>TO THE FULLEST EXTENT PERMITTED BY LAW, DOTMARK SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS, DATA, USE, OR GOODWILL, ARISING OUT OF OR IN CONNECTION WITH THESE TERMS OR YOUR USE OF THE SERVICE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.</p>
+        </section>
+
+        <section>
+            <h2>9. Termination</h2>
+            <p>We reserve the right to suspend or terminate your access to the Service at any time, without notice, for conduct that we believe violates these Terms or is harmful to other users, us, third parties, or for any other reason.</p>
+            <p>You may stop using the Service at any time. To delete your account and associated data, contact us at <a href="mailto:support@dotmark.io">support@dotmark.io</a>.</p>
+        </section>
+
+        <section>
+            <h2>10. Third-Party Services</h2>
+            <p>The Service integrates with third-party services including X (Twitter) and AI providers. Your use of those services is governed by their respective terms and privacy policies. We are not responsible for the practices of third-party services.</p>
+        </section>
+
+        <section>
+            <h2>11. Changes to Terms</h2>
+            <p>We reserve the right to modify these Terms at any time. We will notify users of material changes by updating the "Last updated" date at the top of this page. Continued use of the Service after any changes constitutes your acceptance of the new Terms.</p>
+        </section>
+
+        <section>
+            <h2>12. Governing Law</h2>
+            <p>These Terms shall be governed by and construed in accordance with applicable laws, without regard to conflict of law principles. Any disputes arising from these Terms or the Service shall be resolved through good-faith negotiation or, if necessary, binding arbitration.</p>
+        </section>
+
+        <section>
+            <h2>13. Contact Us</h2>
+            <p>If you have any questions about these Terms, please contact us at:</p>
+            <p><strong>Email:</strong> <a href="mailto:support@dotmark.io">support@dotmark.io</a></p>
+        </section>
+
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="border-t border-white/[0.04]">
+    <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+            <div class="w-5 h-5 rounded bg-sky-500/80 flex items-center justify-center">
+                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+            </div>
+            <span class="text-gray-700 text-xs font-medium">dotmark</span>
+        </div>
+        <div class="flex items-center gap-6">
+            <a href="/privacy" class="text-gray-700 hover:text-gray-400 text-xs transition">Privacy Policy</a>
+            <a href="/terms" class="text-gray-700 hover:text-gray-400 text-xs transition">Terms of Service</a>
+        </div>
+        <p class="text-gray-800 text-xs font-light">© 2025 Dotmark. All rights reserved.</p>
+    </div>
+</footer>
+
+<style>
+.prose-custom h2 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.prose-custom h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+.prose-custom p {
+    color: #6b7280;
+    font-size: 0.875rem;
+    line-height: 1.75;
+    margin-bottom: 0.75rem;
+    font-weight: 300;
+}
+.prose-custom ul {
+    list-style: none;
+    padding: 0;
+    margin: 0.75rem 0;
+}
+.prose-custom ul li {
+    color: #6b7280;
+    font-size: 0.875rem;
+    line-height: 1.75;
+    font-weight: 300;
+    padding-left: 1.25rem;
+    position: relative;
+    margin-bottom: 0.35rem;
+}
+.prose-custom ul li::before {
+    content: '–';
+    position: absolute;
+    left: 0;
+    color: #374151;
+}
+.prose-custom a {
+    color: #38bdf8;
+    text-decoration: none;
+}
+.prose-custom a:hover {
+    text-decoration: underline;
+}
+.prose-custom strong {
+    color: #d1d5db;
+    font-weight: 600;
+}
+.prose-custom code {
+    font-family: monospace;
+    background: rgba(255,255,255,0.06);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #93c5fd;
+}
+section {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.01);
+}
+</style>
+
+{% endblock %}

@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Nav -->
+<nav class="fixed top-0 inset-x-0 z-50 h-14 flex items-center border-b border-white/[0.04] backdrop-blur-2xl bg-gray-950/75">
+    <div class="max-w-5xl mx-auto px-6 w-full flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-md bg-sky-500/90 flex items-center justify-center">
+                <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+            </div>
+            <span class="font-semibold text-sm tracking-tight" style="font-family:'DM Sans',sans-serif;">dotmark</span>
+        </a>
+        <a href="/" class="text-xs text-gray-500 hover:text-gray-300 transition">← Back to home</a>
+    </div>
+</nav>
+
+<!-- Content -->
+<main class="pt-24 pb-24 max-w-3xl mx-auto px-6">
+    <div class="mb-12">
+        <p class="text-sky-500/80 text-xs font-medium uppercase tracking-[0.2em] mb-4">Legal</p>
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">Privacy Policy</h1>
+        <p class="text-gray-600 text-sm font-light">Last updated: April 28, 2025</p>
+    </div>
+
+    <div class="prose-custom space-y-10">
+
+        <section>
+            <h2>1. Introduction</h2>
+            <p>Welcome to <strong>Dotmark</strong> ("we," "us," or "our"). Dotmark is an AI-powered bookmark intelligence tool that connects to X (formerly Twitter) to help you organize and act on your saved content. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our service at <strong>dotmark.io</strong> (the "Service").</p>
+            <p>By using Dotmark, you agree to the collection and use of information in accordance with this policy. If you do not agree, please do not use the Service.</p>
+        </section>
+
+        <section>
+            <h2>2. Information We Collect</h2>
+            <h3>2.1 Information from X (Twitter)</h3>
+            <p>When you sign in with X, we collect the following data through the X API via OAuth 2.0:</p>
+            <ul>
+                <li><strong>X User ID</strong> — a unique identifier for your X account.</li>
+                <li><strong>X Username (handle)</strong> — your public @username on X.</li>
+                <li><strong>Bookmark content</strong> — the text of the tweets you have bookmarked on X, retrieved only when you explicitly trigger a sync.</li>
+                <li><strong>OAuth Access Token</strong> — a token that allows us to fetch your bookmarks on your behalf. This token is stored securely and used solely to retrieve your bookmarks from X.</li>
+            </ul>
+            <p>We request the minimum scopes required for the Service to function: <code>tweet.read</code>, <code>users.read</code>, <code>bookmark.read</code>, and <code>offline.access</code>. We do <strong>not</strong> request write permissions and cannot post, like, retweet, or modify anything on your behalf.</p>
+
+            <h3>2.2 Usage Data</h3>
+            <p>We may collect information your browser sends, such as IP address, browser type, and pages visited, for analytics and security purposes. This data is not sold to third parties.</p>
+
+            <h3>2.3 User-Generated Content</h3>
+            <p>Notes, roadmap progress, and annotations you create within Dotmark are stored and associated with your account.</p>
+        </section>
+
+        <section>
+            <h2>3. How We Use Your Information</h2>
+            <p>We use the information we collect exclusively to:</p>
+            <ul>
+                <li>Authenticate you and maintain your session.</li>
+                <li>Retrieve your X bookmarks when you request a sync.</li>
+                <li>Analyze and categorize your bookmarks using AI to provide the core Service functionality.</li>
+                <li>Store your bookmarks, notes, and analysis results so they persist between sessions.</li>
+                <li>Improve the Service's performance, reliability, and features.</li>
+                <li>Respond to support requests or legal obligations.</li>
+            </ul>
+            <p>We do <strong>not</strong> sell, rent, or share your personal data with third parties for advertising or marketing purposes.</p>
+        </section>
+
+        <section>
+            <h2>4. X (Twitter) Data Usage</h2>
+            <p>Dotmark's use of data obtained through the X API complies with the <a href="https://developer.twitter.com/en/developer-terms/agreement-and-policy" target="_blank" rel="noopener">X Developer Agreement and Policy</a>.</p>
+            <ul>
+                <li>Bookmark data is used <strong>only</strong> to provide the core functionality of Dotmark (organization, categorization, and analysis of your personal bookmarks).</li>
+                <li>We do not store or display X data for purposes unrelated to the Service.</li>
+                <li>We do not aggregate X data to build profiles for advertising.</li>
+                <li>We do not share your X data with other X users or external services beyond what is necessary to operate the Service (e.g., AI processing).</li>
+                <li>You may revoke Dotmark's access to your X account at any time through your <a href="https://twitter.com/settings/connected_apps" target="_blank" rel="noopener">X Connected Apps settings</a>.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>5. Data Retention and Deletion</h2>
+            <p>Your data is retained as long as you maintain an active account. You may request deletion of your data at any time by contacting us at <a href="mailto:privacy@dotmark.io">privacy@dotmark.io</a>. Upon request, we will delete your account, stored bookmarks, notes, and any associated data within 30 days.</p>
+            <p>Revoking access via your X Connected Apps settings will prevent future data fetches but will not automatically delete data already stored. Please contact us to delete stored data.</p>
+        </section>
+
+        <section>
+            <h2>6. Data Security</h2>
+            <p>We implement reasonable technical and organizational measures to protect your information, including:</p>
+            <ul>
+                <li>HTTPS encryption for all data in transit.</li>
+                <li>Signed, HttpOnly cookies for session management.</li>
+                <li>Access tokens are stored server-side and never exposed to the browser.</li>
+            </ul>
+            <p>No method of transmission over the Internet is 100% secure. While we strive to protect your information, we cannot guarantee absolute security.</p>
+        </section>
+
+        <section>
+            <h2>7. Third-Party Services</h2>
+            <p>Dotmark uses the following third-party services that may process your data:</p>
+            <ul>
+                <li><strong>X (Twitter) API</strong> — to authenticate users and retrieve bookmarks. Subject to <a href="https://twitter.com/en/privacy" target="_blank" rel="noopener">X's Privacy Policy</a>.</li>
+                <li><strong>AI providers (e.g., OpenAI / Google Gemini)</strong> — bookmark text is sent to AI APIs for categorization and analysis. These providers process data in accordance with their respective privacy policies. No personally identifiable information beyond bookmark text is shared.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>8. Children's Privacy</h2>
+            <p>Dotmark is not directed to children under the age of 13. We do not knowingly collect personal data from children under 13. If you become aware that a child has provided us with personal information, please contact us and we will take steps to delete such information.</p>
+        </section>
+
+        <section>
+            <h2>9. Your Rights</h2>
+            <p>Depending on your location, you may have the following rights regarding your personal data:</p>
+            <ul>
+                <li><strong>Access</strong> — request a copy of the personal data we hold about you.</li>
+                <li><strong>Correction</strong> — request correction of inaccurate data.</li>
+                <li><strong>Deletion</strong> — request deletion of your personal data.</li>
+                <li><strong>Portability</strong> — request your data in a machine-readable format.</li>
+                <li><strong>Objection</strong> — object to certain types of processing.</li>
+            </ul>
+            <p>To exercise these rights, contact us at <a href="mailto:privacy@dotmark.io">privacy@dotmark.io</a>.</p>
+        </section>
+
+        <section>
+            <h2>10. Changes to This Policy</h2>
+            <p>We may update this Privacy Policy from time to time. We will notify users of any material changes by updating the "Last updated" date at the top of this page. Continued use of the Service after changes constitutes acceptance of the updated policy.</p>
+        </section>
+
+        <section>
+            <h2>11. Contact Us</h2>
+            <p>If you have any questions, concerns, or requests regarding this Privacy Policy, please contact us at:</p>
+            <p><strong>Email:</strong> <a href="mailto:privacy@dotmark.io">privacy@dotmark.io</a></p>
+        </section>
+
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="border-t border-white/[0.04]">
+    <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+            <div class="w-5 h-5 rounded bg-sky-500/80 flex items-center justify-center">
+                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+            </div>
+            <span class="text-gray-700 text-xs font-medium">dotmark</span>
+        </div>
+        <div class="flex items-center gap-6">
+            <a href="/privacy" class="text-gray-700 hover:text-gray-400 text-xs transition">Privacy Policy</a>
+            <a href="/terms" class="text-gray-700 hover:text-gray-400 text-xs transition">Terms of Service</a>
+        </div>
+        <p class="text-gray-800 text-xs font-light">© 2025 Dotmark. All rights reserved.</p>
+    </div>
+</footer>
+
+<style>
+.prose-custom h2 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.prose-custom h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+.prose-custom p {
+    color: #6b7280;
+    font-size: 0.875rem;
+    line-height: 1.75;
+    margin-bottom: 0.75rem;
+    font-weight: 300;
+}
+.prose-custom ul {
+    list-style: none;
+    padding: 0;
+    margin: 0.75rem 0;
+    space-y: 0.5rem;
+}
+.prose-custom ul li {
+    color: #6b7280;
+    font-size: 0.875rem;
+    line-height: 1.75;
+    font-weight: 300;
+    padding-left: 1.25rem;
+    position: relative;
+    margin-bottom: 0.35rem;
+}
+.prose-custom ul li::before {
+    content: '–';
+    position: absolute;
+    left: 0;
+    color: #374151;
+}
+.prose-custom a {
+    color: #38bdf8;
+    text-decoration: none;
+}
+.prose-custom a:hover {
+    text-decoration: underline;
+}
+.prose-custom strong {
+    color: #d1d5db;
+    font-weight: 600;
+}
+.prose-custom code {
+    font-family: monospace;
+    background: rgba(255,255,255,0.06);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #93c5fd;
+}
+section {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.01);
+}
+</style>
+
+{% endblock %}

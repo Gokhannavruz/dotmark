@@ -248,3 +248,12 @@ async def get_bookmarks(user_id: int) -> list:
             d["key_points"] = json.loads(d["key_points"]) if d.get("key_points") else []
             result.append(d)
         return result
+
+
+async def delete_user(user_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        # First delete all user's bookmarks
+        await db.execute("DELETE FROM bookmarks WHERE user_id = ?", (user_id,))
+        # Then delete the user
+        await db.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        await db.commit()
