@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from itsdangerous import URLSafeSerializer, BadSignature
 from urllib.parse import urlencode
 
@@ -21,6 +22,7 @@ from x_auth import generate_code_verifier, generate_code_challenge, exchange_cod
 load_dotenv()
 
 app = FastAPI()
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 templates = Jinja2Templates(directory="templates")
 
 SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_hex(32))
