@@ -5,27 +5,27 @@
     <!-- Header -->
     <div class="flex justify-between items-center mb-8">
         <div>
-            <h1 class="text-2xl font-bold">Bookmark'larım</h1>
-            <p class="text-gray-500 text-sm mt-1">{{ total }} bookmark</p>
+            <h1 class="text-2xl font-bold">My Bookmarks</h1>
+            <p class="text-gray-500 text-sm mt-1">{{ total }} bookmarks</p>
         </div>
         <div class="flex items-center gap-3">
             <button id="syncBtn" onclick="syncBookmarks()"
                 class="bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
                 <span id="syncIcon">↻</span>
-                <span id="syncText">Sync Et</span>
+                <span id="syncText">Sync</span>
             </button>
-            <a href="/logout" class="text-gray-500 hover:text-white text-sm transition px-2 border-r border-gray-700">Çıkış</a>
-            <button onclick="confirmDeleteAccount()" class="text-red-500/70 hover:text-red-500 text-sm transition px-2">Hesabı Sil</button>
+            <a href="/logout" class="text-gray-500 hover:text-white text-sm transition px-2 border-r border-gray-700">Logout</a>
+            <button onclick="confirmDeleteAccount()" class="text-red-500/70 hover:text-red-500 text-sm transition px-2">Delete Account</button>
         </div>
     </div>
 
     {% if not categories %}
     <div class="flex flex-col items-center justify-center py-32 text-center">
         <div class="text-5xl mb-4">📭</div>
-        <p class="text-gray-400 text-lg mb-6">Henüz bookmark yok</p>
+        <p class="text-gray-400 text-lg mb-6">No bookmarks yet</p>
         <button onclick="syncBookmarks()"
             class="bg-sky-500 hover:bg-sky-400 text-white px-6 py-3 rounded-xl font-medium transition">
-            Bookmark'ları Getir
+            Fetch Bookmarks
         </button>
     </div>
 
@@ -35,7 +35,7 @@
     <div class="flex flex-wrap gap-2 mb-6">
         <button onclick="filterCategory('all')" data-cat="all"
             class="cat-tab px-3 py-1.5 rounded-lg text-sm font-medium bg-sky-500 text-white transition">
-            Tümü ({{ total }})
+            All ({{ total }})
         </button>
         {% for category, items in categories.items() %}
         <button onclick="filterCategory('{{ category }}')" data-cat="{{ category }}"
@@ -47,7 +47,7 @@
 
     <!-- Content type filter -->
     <div class="flex flex-wrap gap-2 mb-8">
-        <span class="text-xs text-gray-600 self-center mr-1">Tür:</span>
+        <span class="text-xs text-gray-600 self-center mr-1">Type:</span>
         {% for ctype in ["Tutorial", "Tool", "Article", "Thread", "Tip", "Resource"] %}
         <button onclick="filterType('{{ ctype }}')" data-type="{{ ctype }}"
             class="type-tab px-2 py-1 rounded-md text-xs font-medium bg-gray-900 border border-gray-700 hover:border-gray-500 text-gray-400 transition">
@@ -56,7 +56,7 @@
         {% endfor %}
         <button onclick="filterType('all')" data-type="all"
             class="px-2 py-1 rounded-md text-xs text-gray-600 hover:text-gray-400 transition">
-            Temizle
+            Clear
         </button>
     </div>
 
@@ -72,7 +72,7 @@
 
                 <!-- Top badges -->
                 <div class="flex items-center gap-2 flex-wrap">
-                    {% if bm.is_read %}<span class="text-xs text-emerald-600 font-medium">✓ Okundu</span>{% endif %}
+                    {% if bm.is_read %}<span class="text-xs text-emerald-600 font-medium">✓ Read</span>{% endif %}
                     <span class="content-type-badge text-xs px-2 py-0.5 rounded-md font-medium
                         {% if bm.content_type == 'Tutorial' %}bg-blue-500/20 text-blue-400
                         {% elif bm.content_type == 'Tool' %}bg-purple-500/20 text-purple-400
@@ -93,7 +93,7 @@
                     {% endif %}
 
                     {% if not bm.is_evergreen %}
-                    <span class="text-xs px-2 py-0.5 rounded-md bg-amber-900/30 text-amber-500">⏱ Güncel</span>
+                    <span class="text-xs px-2 py-0.5 rounded-md bg-amber-900/30 text-amber-500">⏱ Time-sensitive</span>
                     {% endif %}
 
                     {% if bm.action %}
@@ -121,7 +121,7 @@
                 <!-- Original tweet (collapsed) -->
                 <details class="group">
                     <summary class="text-xs text-gray-600 cursor-pointer hover:text-gray-400 transition list-none">
-                        Orijinal tweet ▾
+                        Original tweet ▾
                     </summary>
                     <p class="text-xs text-gray-600 mt-2 leading-relaxed border-t border-gray-800 pt-2">
                         {{ bm.text }}
@@ -172,8 +172,8 @@
             <div class="absolute w-6 h-6 bg-sky-400 rounded-full shadow-[0_0_15px_rgba(56,189,248,0.8)] animate-pulse"></div>
         </div>
         
-        <h3 class="text-lg font-bold text-white mb-2">Claude Sonnet Analiz Ediyor</h3>
-        <p class="text-sm text-gray-400 leading-relaxed">Yeni bookmark'larınız okunuyor, kategorize ediliyor ve aksiyon planları çıkartılıyor. Bu işlem birkaç saniye sürebilir...</p>
+        <h3 class="text-lg font-bold text-white mb-2">Claude Sonnet is Analyzing</h3>
+        <p class="text-sm text-gray-400 leading-relaxed">Your bookmarks are being read, categorized, and action plans are being generated. This may take a few seconds...</p>
     </div>
 </div>
 
@@ -196,7 +196,7 @@ async function syncBookmarks() {
     const overlayContent = document.getElementById('aiOverlayContent');
     
     btn.disabled = true;
-    document.getElementById('syncText').textContent = 'Yükleniyor...';
+    document.getElementById('syncText').textContent = 'Loading...';
     
     // Show overlay
     overlay.classList.remove('hidden');
@@ -211,18 +211,18 @@ async function syncBookmarks() {
         const res = await fetch('/sync', { method: 'POST' });
         const data = await res.json();
         if (!res.ok || data.error) {
-            showToast(`✗ ${data.error || 'Hata oluştu'}`, 6000);
+            showToast(`✗ ${data.error || 'An error occurred'}`, 6000);
             hideOverlay();
         } else {
-            showToast(`✓ ${data.count} bookmark analiz edildi!`);
+            showToast(`✓ ${data.count} bookmarks analyzed!`);
             setTimeout(() => window.location.reload(), 1500);
         }
     } catch (e) {
-        showToast('✗ Sunucuya bağlanılamadı: ' + e.message, 6000);
+        showToast('✗ Could not connect to server: ' + e.message, 6000);
         hideOverlay();
     } finally {
         btn.disabled = false;
-        document.getElementById('syncText').textContent = 'Sync Et';
+        document.getElementById('syncText').textContent = 'Sync';
     }
 }
 
@@ -258,17 +258,17 @@ function filterType(type) {
 }
 
 async function confirmDeleteAccount() {
-    if (confirm("Hesabını ve tüm verilerini kalıcı olarak silmek istediğinden emin misin? Bu işlem geri alınamaz.")) {
+    if (confirm("Are you sure you want to permanently delete your account and all data? This action cannot be undone.")) {
         try {
             const res = await fetch('/account/delete', { method: 'POST' });
             if (res.ok) {
                 window.location.href = '/';
             } else {
                 const data = await res.json();
-                showToast(`✗ Hata: ${data.error || 'Hesap silinemedi'}`, 6000);
+                showToast(`✗ Error: ${data.error || 'Account could not be deleted'}`, 6000);
             }
         } catch (e) {
-            showToast('✗ Sunucuya bağlanılamadı: ' + e.message, 6000);
+            showToast('✗ Could not connect to server: ' + e.message, 6000);
         }
     }
 }

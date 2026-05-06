@@ -22,7 +22,7 @@ ACTIONS = ["Read", "Try", "Watch", "Practice", "Save"]
 async def deep_analyze(bookmark: dict, similar: list) -> dict:
     similar_text = "\n".join([
         f"- {b['summary'] or b['text'][:100]}" for b in similar[:5]
-    ]) if similar else "Yok"
+    ]) if similar else "None"
 
     response = await asyncio.to_thread(
         client.messages.create,
@@ -30,36 +30,36 @@ async def deep_analyze(bookmark: dict, similar: list) -> dict:
         max_tokens=3000,
         messages=[{
             "role": "user",
-            "content": f"""Bir yazılım geliştirici bu tweet'i bookmark'lamış. Derinlemesine analiz yap.
+            "content": f"""A software developer bookmarked this tweet. Perform a deep analysis.
 
 Tweet:
 {bookmark['text']}
 
-Mevcut Analiz:
-- Kategori: {bookmark.get('category')} / {bookmark.get('subcategory')}
-- Tür: {bookmark.get('content_type')}
-- Zorluk: {bookmark.get('difficulty')}
+Current Analysis:
+- Category: {bookmark.get('category')} / {bookmark.get('subcategory')}
+- Type: {bookmark.get('content_type')}
+- Difficulty: {bookmark.get('difficulty')}
 
-Benzer Bookmark'lar:
+Similar Bookmarks:
 {similar_text}
 
-Şu JSON formatında döndür (başka hiçbir şey yazma):
+Return only JSON in this format (nothing else):
 {{
-  "detailed_summary": "Bu içeriğin 3-4 cümlelik kapsamlı Türkçe özeti",
-  "why_it_matters": "Bu neden önemli? Pratikte ne işe yarar? (2-3 cümle)",
-  "prerequisites": ["Önkoşul 1", "Önkoşul 2"],
+  "detailed_summary": "A comprehensive 3-4 sentence summary of this content in English",
+  "why_it_matters": "Why is this important? What practical value does it have? (2-3 sentences)",
+  "prerequisites": ["Prerequisite 1", "Prerequisite 2"],
   "what_to_do": [
-    {{"step": 1, "action": "Yapılacak ilk şey", "detail": "Nasıl yapılacak"}},
-    {{"step": 2, "action": "Yapılacak ikinci şey", "detail": "Nasıl yapılacak"}},
-    {{"step": 3, "action": "Yapılacak üçüncü şey", "detail": "Nasıl yapılacak"}}
+    {{"step": 1, "action": "First thing to do", "detail": "How to do it"}},
+    {{"step": 2, "action": "Second thing to do", "detail": "How to do it"}},
+    {{"step": 3, "action": "Third thing to do", "detail": "How to do it"}}
   ],
   "roadmap": [
-    {{"phase": "Başlangıç", "steps": ["Adım 1", "Adım 2"], "duration": "1 hafta"}},
-    {{"phase": "Orta Seviye", "steps": ["Adım 3", "Adım 4"], "duration": "2 hafta"}},
-    {{"phase": "İleri Seviye", "steps": ["Adım 5", "Adım 6"], "duration": "1 ay"}}
+    {{"phase": "Beginner", "steps": ["Step 1", "Step 2"], "duration": "1 week"}},
+    {{"phase": "Intermediate", "steps": ["Step 3", "Step 4"], "duration": "2 weeks"}},
+    {{"phase": "Advanced", "steps": ["Step 5", "Step 6"], "duration": "1 month"}}
   ],
-  "resources": ["İlgili kaynak veya araç önerisi 1", "İlgili kaynak önerisi 2"],
-  "connection_to_similar": "Bu bookmark diğer bookmark'larla nasıl bağlantılı? (varsa)"
+  "resources": ["Related resource or tool suggestion 1", "Related resource suggestion 2"],
+  "connection_to_similar": "How does this bookmark connect to other bookmarks? (if applicable)"
 }}"""
         }]
     )
@@ -77,35 +77,27 @@ Benzer Bookmark'lar:
 
 BASE_QUESTIONS = [
     {
-        "id": "prompt_lang",
-        "question": "Prompt hangi dilde olsun?",
-        "why": "Oluşturulacak promptun dili",
-        "type": "radio",
-        "options": ["Türkçe", "English"],
-        "default": "Türkçe",
-    },
-    {
         "id": "platform",
-        "question": "Hangi platform(lar) için geliştiriyorsun?",
-        "why": "Tech stack seçimini belirler",
+        "question": "Which platform(s) are you building for?",
+        "why": "Determines the tech stack selection",
         "type": "radio",
-        "options": ["Sadece Mobil", "Sadece Web", "Mobil + Web"],
-        "default": "Sadece Mobil",
+        "options": ["Mobile only", "Web only", "Mobile + Web"],
+        "default": "Mobile only",
     },
     {
         "id": "prog_lang",
-        "question": "Hangi programlama dili / framework?",
-        "why": "Proje iskeleti bu dile göre oluşturulur",
+        "question": "Which programming language / framework?",
+        "why": "The project scaffold will be generated for this language",
         "type": "select",
         "options": ["Flutter (Dart)", "Swift (iOS)", "Kotlin (Android)", "React Native", "Next.js (TypeScript)", "Vue.js", "FastAPI (Python)", "Node.js + Express"],
         "default": "Flutter (Dart)",
     },
     {
         "id": "database",
-        "question": "Hangi veritabanı kullanmak istersin?",
-        "why": "Veri modeli ve backend mimarisi buna göre şekillenir",
+        "question": "Which database would you like to use?",
+        "why": "Shapes the data model and backend architecture",
         "type": "select",
-        "options": ["Supabase (PostgreSQL)", "Firebase Firestore", "SQLite (lokal)", "PostgreSQL (kendi sunucu)", "MongoDB", "PocketBase"],
+        "options": ["Supabase (PostgreSQL)", "Firebase Firestore", "SQLite (local)", "PostgreSQL (self-hosted)", "MongoDB", "PocketBase"],
         "default": "Supabase (PostgreSQL)",
     },
 ]
@@ -117,42 +109,42 @@ async def generate_mvp_questions(bookmark: dict) -> dict:
         max_tokens=1500,
         messages=[{
             "role": "user",
-            "content": f"""Bir yazılımcı bu bookmark'tan bir ürün geliştirmek istiyor.
+            "content": f"""A developer wants to build a product based on this bookmark.
 
 Bookmark:
 {bookmark['text']}
 
-Özet: {bookmark.get('summary', '')}
-Kategori: {bookmark.get('category', '')}
+Summary: {bookmark.get('summary', '')}
+Category: {bookmark.get('category', '')}
 
-Görevin:
-1. Bu ürünün ne tür bir proje olduğunu belirle (mobile / web / both)
-2. Bu projeye ÖZEL, aşağıdakilerden FARKLI maksimum 3 soru üret
-3. Zaten sorulacak sorular: prompt dili, platform, programlama dili, veritabanı — bunları TEKRARLAMA
+Your task:
+1. Determine what type of project this is (mobile / web / both)
+2. Generate up to 3 project-SPECIFIC questions DIFFERENT from the ones already asked
+3. Questions already being asked: platform, programming language, database — DO NOT repeat these
 
-Sadece JSON döndür:
+Return only JSON:
 {{
   "project_type": "mobile | web | both",
-  "project_summary": "Projenin 1 cümlelik Türkçe özeti",
+  "project_summary": "One-sentence English summary of the project",
   "extra_questions": [
     {{
-      "id": "benzersiz_id",
-      "question": "Türkçe soru metni",
-      "why": "Neden soruyorsun (kısa)",
+      "id": "unique_id",
+      "question": "Question text in English",
+      "why": "Why you are asking this (brief)",
       "type": "select | radio | text",
-      "options": ["Seçenek 1", "Seçenek 2"],
-      "default": "Varsayılan"
+      "options": ["Option 1", "Option 2"],
+      "default": "Default"
     }}
   ]
 }}
 
-Proje özelinde sorulabilecek örnekler:
-- Kullanıcı girişi (auth) gerekiyor mu? → Evet / Hayır
-- Offline çalışma gerekiyor mu? → Evet / Hayır
-- Backend API gerekiyor mu? → Evet (kendi server) / Hayır (Supabase/Firebase yeterli)
-- Bildirim (push notification) olacak mı? → Evet / Hayır
-- Ücretli abonelik / in-app purchase? → Evet / Hayır
-- Gerçek zamanlı güncelleme gerekiyor mu? → Evet / Hayır"""
+Examples of project-specific questions:
+- Does the app need user authentication? → Yes / No
+- Should it work offline? → Yes / No
+- Does it need a custom backend API? → Yes (own server) / No (Supabase/Firebase is enough)
+- Will there be push notifications? → Yes / No
+- Paid subscription / in-app purchase? → Yes / No
+- Does it need real-time updates? → Yes / No"""
         }]
     )
 
@@ -175,13 +167,10 @@ Proje özelinde sorulabilecek örnekler:
 
 async def generate_mvp_prompt(bookmark: dict, answers: dict, project_type: str) -> str:
     answers_text = "\n".join([f"- {k}: {v}" for k, v in answers.items()])
-    lang = answers.get("Prompt hangi dilde olsun?", "Türkçe")
-    prog_lang = answers.get("Hangi programlama dili / framework?", "Flutter (Dart)")
-    database = answers.get("Hangi veritabanı kullanmak istersin?", "Supabase (PostgreSQL)")
+    prog_lang = answers.get("Which programming language / framework?", "Flutter (Dart)")
+    database = answers.get("Which database would you like to use?", "Supabase (PostgreSQL)")
     is_mobile = project_type in ("mobile", "both")
     is_web = project_type in ("web", "both")
-
-    prompt_lang_note = "Write the entire prompt and all explanations in English." if lang == "English" else "Promptu ve tüm açıklamaları Türkçe yaz."
 
     response = await asyncio.to_thread(
         client.messages.create,
@@ -189,53 +178,53 @@ async def generate_mvp_prompt(bookmark: dict, answers: dict, project_type: str) 
         max_tokens=4000,
         messages=[{
             "role": "user",
-            "content": f"""Bir yazılımcı bu fikri geliştirmek istiyor.
+            "content": f"""A developer wants to build this idea.
 
 Bookmark:
 {bookmark['text']}
 
-Özet: {bookmark.get('summary', '')}
-Proje tipi: {project_type}
-Ana dil/framework: {prog_lang}
-Veritabanı: {database}
+Summary: {bookmark.get('summary', '')}
+Project type: {project_type}
+Primary language/framework: {prog_lang}
+Database: {database}
 
-Kullanıcının tüm tercihleri:
+All user preferences:
 {answers_text}
 
-{prompt_lang_note}
+Write the entire prompt and all explanations in English.
 
-Doğrudan Claude Code veya başka bir AI kodlama asistanına yapıştırılacak, eksiksiz bir MVP geliştirme promptu oluştur.
+Generate a complete MVP development prompt to be pasted directly into Claude Code or another AI coding assistant.
 
 Format:
 ---
-## 🚀 MVP Geliştirme Promptu
+## 🚀 MVP Development Prompt
 
-### Proje Tanımı
-[Ne yapıyor, kime hitap ediyor, temel değer önerisi]
+### Project Definition
+[What it does, who it's for, core value proposition]
 
 ### Platform & Tech Stack
-[Kullanıcı tercihlerine göre kesinleşmiş stack - her şeyi ver, belirsizlik bırakma]
+[Finalized stack based on user preferences — be specific, leave no ambiguity]
 
-### MVP Özellikleri (v1.0)
-[Sadece core, scope creep yok]
+### MVP Features (v1.0)
+[Core only, no scope creep]
 
-### Ekranlar / Sayfalar
-[Her biri için: ne gösteriyor, kullanıcı ne yapabilir]
+### Screens / Pages
+[For each: what it shows, what the user can do]
 
-### Veri Modelleri
-[Kod bloğu içinde]
+### Data Models
+[In a code block]
 
-### Klasör & Mimari Yapısı
-[Kod bloğu içinde - clean architecture]
+### Folder & Architecture Structure
+[In a code block — clean architecture]
 
-### Geliştirme Sırası
-[Önce ne, sonra ne - sıralı adımlar]
+### Development Order
+[What to build first, what next — sequential steps]
 
 ---
-## 🤖 Claude Code'a Yapıştırılacak Prompt
+## 🤖 Prompt to Paste into Claude Code
 
-[Tek seferlik, her şeyi içeren, belirsizlik bırakmayan, direkt çalıştırılabilir prompt.
-State management, navigation, tüm ekranlar, auth (isteniyorsa), veritabanı entegrasyonu dahil.]
+[Single-use, all-inclusive, unambiguous, ready-to-run prompt.
+Include state management, navigation, all screens, auth (if requested), database integration.]
 ---"""
         }]
     )
@@ -262,29 +251,29 @@ async def _categorize_batch(tweets: list) -> list:
         max_tokens=4000,
         messages=[{
             "role": "user",
-            "content": f"""Sen bir yazılım geliştirici asistanısın. Aşağıdaki Twitter bookmark'larını derinlemesine analiz et.
+            "content": f"""You are a software developer assistant. Deeply analyze the following Twitter bookmarks.
 
-Kategoriler: {', '.join(CATEGORIES)}
-İçerik Türleri: {', '.join(CONTENT_TYPES)}
-Zorluk Seviyeleri: {', '.join(DIFFICULTIES)}
-Eylem Türleri: {', '.join(ACTIONS)}
+Categories: {', '.join(CATEGORIES)}
+Content Types: {', '.join(CONTENT_TYPES)}
+Difficulty Levels: {', '.join(DIFFICULTIES)}
+Action Types: {', '.join(ACTIONS)}
 
-Tweet'ler:
+Tweets:
 {tweets_text}
 
-Her tweet için şu JSON formatında analiz yap. Sadece JSON array döndür, başka hiçbir şey yazma:
+Analyze each tweet in the following JSON format. Return only a JSON array, nothing else:
 [
   {{
     "id": "tweet_id",
-    "category": "ana kategori",
-    "subcategory": "alt kategori (ör: SwiftUI, Jetpack Compose, FastAPI)",
-    "content_type": "içerik türü",
-    "difficulty": "zorluk seviyesi",
-    "action": "önerilen eylem",
-    "summary": "1 cümle net Türkçe özet - ne öğrettiğini veya ne olduğunu açıkla",
+    "category": "main category",
+    "subcategory": "subcategory (e.g. SwiftUI, Jetpack Compose, FastAPI)",
+    "content_type": "content type",
+    "difficulty": "difficulty level",
+    "action": "recommended action",
+    "summary": "1 clear English sentence — explain what it teaches or what it is",
     "key_points": [
-      "Ana fikir veya öğrenilecek şey 1",
-      "Ana fikir veya öğrenilecek şey 2"
+      "Main idea or thing to learn 1",
+      "Main idea or thing to learn 2"
     ],
     "tags": ["tag1", "tag2", "tag3"],
     "priority": 3,
@@ -292,11 +281,11 @@ Her tweet için şu JSON formatında analiz yap. Sadece JSON array döndür, ba�
   }}
 ]
 
-Kurallar:
-- priority: 1=genel bilgi, 3=faydalı, 5=mutlaka öğrenilmeli
-- is_evergreen: false ise zaman hassas içerik (haber, duyuru, indirim vs)
-- key_points: somut, uygulanabilir maddeler yaz
-- subcategory: mümkün olduğunca spesifik tut"""
+Rules:
+- priority: 1=general info, 3=useful, 5=must learn
+- is_evergreen: false means time-sensitive content (news, announcements, discounts, etc.)
+- key_points: write concrete, actionable items
+- subcategory: keep as specific as possible"""
         }]
     )
 

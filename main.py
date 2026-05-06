@@ -79,12 +79,12 @@ async def auth_login():
 @app.get("/auth/callback")
 async def auth_callback(request: Request, code: str = None, state: str = None):
     if not state:
-        raise HTTPException(400, "OAuth state eksik")
+        raise HTTPException(400, "OAuth state missing")
 
     try:
         oauth_data = s.loads(state)
     except BadSignature:
-        raise HTTPException(400, "Geçersiz OAuth state")
+        raise HTTPException(400, "Invalid OAuth state")
 
     token_data = await exchange_code_for_token(code, oauth_data["cv"])
     access_token = token_data["access_token"]
@@ -127,12 +127,12 @@ async def dashboard(request: Request):
 async def sync_bookmarks(request: Request):
     session = get_session(request)
     if not session:
-        return JSONResponse({"error": "Giriş yapılmamış"}, status_code=401)
+        return JSONResponse({"error": "Not logged in"}, status_code=401)
 
     try:
         user = await get_user_by_id(session["user_id"])
         if not user:
-            return JSONResponse({"error": "Kullanıcı bulunamadı"}, status_code=404)
+            return JSONResponse({"error": "User not found"}, status_code=404)
 
         headers = {"Authorization": f"Bearer {user['access_token']}"}
         tweets = []
@@ -141,7 +141,7 @@ async def sync_bookmarks(request: Request):
             me_res = await http.get("https://api.twitter.com/2/users/me", headers=headers)
             if me_res.status_code != 200:
                 return JSONResponse(
-                    {"error": f"Twitter kullanıcı bilgisi alınamadı ({me_res.status_code}): {me_res.text}"},
+                    {"error": f"Could not retrieve Twitter user info ({me_res.status_code}): {me_res.text}"},
                     status_code=502
                 )
             user_x_id = me_res.json()["data"]["id"]
@@ -153,7 +153,7 @@ async def sync_bookmarks(request: Request):
             )
             if bm_res.status_code != 200:
                 return JSONResponse(
-                    {"error": f"Bookmarklar alınamadı ({bm_res.status_code}): {bm_res.text}"},
+                    {"error": f"Could not retrieve bookmarks ({bm_res.status_code}): {bm_res.text}"},
                     status_code=502
                 )
             bm_data = bm_res.json()
@@ -162,11 +162,11 @@ async def sync_bookmarks(request: Request):
                 tweets = [{"id": str(t["id"]), "text": t["text"]} for t in bm_data["data"]]
 
         if not tweets:
-            return JSONResponse({"message": "Bookmark bulunamadı", "count": 0})
+            return JSONResponse({"message": "No bookmarks found", "count": 0})
 
         categorized = await categorize_bookmarks(tweets)
         await save_bookmarks(session["user_id"], categorized)
-        return JSONResponse({"message": "Tamamlandı!", "count": len(categorized)})
+        return JSONResponse({"message": "Done!", "count": len(categorized)})
 
     except Exception as e:
         return JSONResponse({"error": f"{type(e).__name__}: {str(e)}"}, status_code=500)
@@ -180,7 +180,7 @@ async def bookmark_detail(request: Request, tweet_id: str):
 
     bookmark = await get_bookmark(session["user_id"], tweet_id)
     if not bookmark:
-        raise HTTPException(404, "Bookmark bulunamadı")
+        raise HTTPException(404, "Bookmark not found")
 
     similar = await get_similar_bookmarks(
         session["user_id"], tweet_id,
@@ -293,42 +293,42 @@ async def export_roadmap(request: Request, tweet_id: str):
         raise HTTPException(401)
     bookmark = await get_bookmark(session["user_id"], tweet_id)
     if not bookmark or not bookmark.get("deep_analysis"):
-        raise HTTPException(404, "Analiz bulunamadı")
+        raise HTTPException(404, "Analysis not found")
 
     analysis = bookmark["deep_analysis"]
     lines = [
         f"# {bookmark['summary'] or bookmark['text'][:80]}",
-        f"\n**Kategori:** {bookmark['category']} / {bookmark['subcategory']}",
-        f"**Zorluk:** {bookmark['difficulty']}  |  **Tür:** {bookmark['content_type']}",
-        f"\n## Özet\n{analysis.get('detailed_summary', '')}",
-        f"\n## Neden Önemli?\n{analysis.get('why_it_matters', '')}",
+        f"\n**Category:** {bookmark['category']} / {bookmark['subcategory']}",
+        f"**Difficulty:** {bookmark['difficulty']}  |  **Type:** {bookmark['content_type']}",
+        f"\n## Summary\n{analysis.get('detailed_summary', '')}",
+        f"\n## Why It Matters\n{analysis.get('why_it_matters', '')}",
     ]
 
     if analysis.get("prerequisites"):
-        lines.append("\n## Önkoşullar")
+        lines.append("\n## Prerequisites")
         for p in analysis["prerequisites"]:
             lines.append(f"- {p}")
 
     if analysis.get("what_to_do"):
-        lines.append("\n## Ne Yapmalısın?")
+        lines.append("\n## What To Do")
         for step in analysis["what_to_do"]:
             lines.append(f"\n**{step['step']}. {step['action']}**")
             lines.append(f"{step['detail']}")
 
     if analysis.get("roadmap"):
-        lines.append("\n## Öğrenme Yol Haritası")
+        lines.append("\n## Learning Roadmap")
         for phase in analysis["roadmap"]:
             lines.append(f"\n### {phase['phase']} ({phase.get('duration', '')})")
             for step in phase.get("steps", []):
                 lines.append(f"- [ ] {step}")
 
     if analysis.get("resources"):
-        lines.append("\n## Kaynaklar")
+        lines.append("\n## Resources")
         for r in analysis["resources"]:
             lines.append(f"- {r}")
 
     if bookmark.get("notes"):
-        lines.append(f"\n## Notlarım\n{bookmark['notes']}")
+        lines.append(f"\n## My Notes\n{bookmark['notes']}")
 
     content = "\n".join(lines)
     return PlainTextResponse(
