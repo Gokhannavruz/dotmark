@@ -36,13 +36,14 @@ async def init_db():
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """)
-        # Migrate users table if subscription columns missing
+        # Migrate users table if subscription/sync columns missing
         for col, definition in [
             ("paddle_customer_id", "TEXT"),
             ("paddle_subscription_id", "TEXT"),
             ("subscription_status", "TEXT DEFAULT 'free'"),
             ("subscription_plan", "TEXT"),
             ("subscription_ends_at", "DATETIME"),
+            ("last_synced_at", "DATETIME"),
         ]:
             try:
                 await db.execute(f"ALTER TABLE users ADD COLUMN {col} {definition}")
@@ -261,6 +262,32 @@ async def get_bookmarks(user_id: int) -> list:
             d["key_points"] = json.loads(d["key_points"]) if d.get("key_points") else []
             result.append(d)
         return result
+
+
+async def count_bookmarks(user_id: int) -> int:
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            "SELECT COUNT(*) FROM bookmarks WHERE user_id = ?", (user_id,)
+        )
+        row = await cursor.fetchone()
+        return row[0] if row else 0
+
+
+async def get_existing_tweet_ids(user_id: int) -> set:
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            "SELECT tweet_id FROM bookmarks WHERE user_id = ?", (user_id,)
+        )
+        rows = await cursor.fetchall()
+        return {row[0] for row in rows}
+
+
+async def update_last_synced(user_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "UPDATE users SET last_synced_at = CURRENT_TIMESTAMP WHERE id = ?", (user_id,)
+        )
+        await db.commit()
 
 
 async def get_user_by_paddle_customer(paddle_customer_id: str) -> dict:

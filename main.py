@@ -19,6 +19,7 @@ from database import (
     save_mvp_prompt, delete_user,
     get_user_by_paddle_customer, get_user_by_paddle_subscription,
     update_subscription, update_subscription_by_sub_id,
+    count_bookmarks, get_existing_tweet_ids, update_last_synced,
 )
 from ai_service import categorize_bookmarks, deep_analyze, generate_mvp_prompt, generate_mvp_questions
 from x_auth import generate_code_verifier, generate_code_challenge, exchange_code_for_token, get_user_info
@@ -79,13 +80,58 @@ def get_session(request: Request):
         return None
 
 
+# ── Helpers ─────────────────────────────────────────────────────────────────
+
+async def _do_sync(user_id: int, access_token: str) -> dict:
+    """Fetch bookmarks from X and categorize only NEW ones with AI."""
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    async with httpx.AsyncClient() as http:
+        me_res = await http.get("https://api.twitter.com/2/users/me", headers=headers)
+        if me_res.status_code != 200:
+            raise RuntimeError(f"Twitter /users/me failed ({me_res.status_code}): {me_res.text}")
+        user_x_id = me_res.json()["data"]["id"]
+
+        bm_res = await http.get(
+            f"https://api.twitter.com/2/users/{user_x_id}/bookmarks",
+            headers=headers,
+            params={"max_results": 100, "tweet.fields": "created_at,entities"},
+        )
+        if bm_res.status_code != 200:
+            raise RuntimeError(f"Twitter /bookmarks failed ({bm_res.status_code}): {bm_res.text}")
+
+        bm_data = bm_res.json()
+        all_tweets = []
+        if bm_data.get("data"):
+            all_tweets = [{"id": str(t["id"]), "text": t["text"]} for t in bm_data["data"]]
+
+    if not all_tweets:
+        return {"count": 0, "new": 0}
+
+    # Only send NEW tweets to the AI — saves cost on re-syncs
+    existing_ids = await get_existing_tweet_ids(user_id)
+    new_tweets = [t for t in all_tweets if t["id"] not in existing_ids]
+
+    if new_tweets:
+        categorized = await categorize_bookmarks(new_tweets)
+        await save_bookmarks(user_id, categorized)
+
+    await update_last_synced(user_id)
+    return {"count": len(all_tweets), "new": len(new_tweets)}
+
+
 # ── Routes ──────────────────────────────────────────────────────────────────
+
+_SECURE_COOKIE = os.getenv("REDIRECT_URI", "").startswith("https")
+
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     session = get_session(request)
+    if session:
+        return RedirectResponse(url="/dashboard", status_code=302)
     return templates.TemplateResponse(
-        "index.html", {"request": request, "logged_in": bool(session)}
+        "index.html", {"request": request, "logged_in": False}
     )
 
 
@@ -127,6 +173,14 @@ async def auth_callback(request: Request, code: str = None, state: str = None):
     user_info = await get_user_info(access_token)
     user_id = await save_user(user_info["id"], user_info["username"], access_token)
 
+    # Auto-sync if this is a new account (no bookmarks yet)
+    existing_count = await count_bookmarks(user_id)
+    if existing_count == 0:
+        try:
+            await _do_sync(user_id, access_token)
+        except Exception:
+            pass  # Don't block login if sync fails
+
     response = RedirectResponse(url="/dashboard")
     response.set_cookie(
         "session",
@@ -134,7 +188,7 @@ async def auth_callback(request: Request, code: str = None, state: str = None):
         max_age=86400 * 30,
         httponly=True,
         samesite="lax",
-        secure=True,
+        secure=_SECURE_COOKIE,
     )
     return response
 
@@ -175,39 +229,9 @@ async def sync_bookmarks(request: Request):
         if not user:
             return JSONResponse({"error": "User not found"}, status_code=404)
 
-        headers = {"Authorization": f"Bearer {user['access_token']}"}
-        tweets = []
-
-        async with httpx.AsyncClient() as http:
-            me_res = await http.get("https://api.twitter.com/2/users/me", headers=headers)
-            if me_res.status_code != 200:
-                return JSONResponse(
-                    {"error": f"Could not retrieve Twitter user info ({me_res.status_code}): {me_res.text}"},
-                    status_code=502
-                )
-            user_x_id = me_res.json()["data"]["id"]
-
-            bm_res = await http.get(
-                f"https://api.twitter.com/2/users/{user_x_id}/bookmarks",
-                headers=headers,
-                params={"max_results": 10, "tweet.fields": "created_at,entities"},
-            )
-            if bm_res.status_code != 200:
-                return JSONResponse(
-                    {"error": f"Could not retrieve bookmarks ({bm_res.status_code}): {bm_res.text}"},
-                    status_code=502
-                )
-            bm_data = bm_res.json()
-
-            if bm_data.get("data"):
-                tweets = [{"id": str(t["id"]), "text": t["text"]} for t in bm_data["data"]]
-
-        if not tweets:
-            return JSONResponse({"message": "No bookmarks found", "count": 0})
-
-        categorized = await categorize_bookmarks(tweets)
-        await save_bookmarks(session["user_id"], categorized)
-        return JSONResponse({"message": "Done!", "count": len(categorized)})
+        result = await _do_sync(user["id"], user["access_token"])
+        msg = f"Done! {result['new']} new bookmark(s) added." if result["new"] else "Already up to date."
+        return JSONResponse({"message": msg, "count": result["count"], "new": result["new"]})
 
     except Exception as e:
         return JSONResponse({"error": f"{type(e).__name__}: {str(e)}"}, status_code=500)
