@@ -14,6 +14,11 @@
                 <span id="syncIcon">↻</span>
                 <span id="syncText">Sync</span>
             </button>
+            {% if subscription_status in ("active", "trialing") %}
+            <a href="/account/portal" class="text-xs text-sky-400/80 hover:text-sky-400 transition px-2 border-r border-gray-700">Pro ✦</a>
+            {% else %}
+            <a href="/pricing" class="text-xs text-gray-500 hover:text-white transition px-2 border-r border-gray-700">Upgrade to Pro</a>
+            {% endif %}
             <a href="/logout" class="text-gray-500 hover:text-white text-sm transition px-2 border-r border-gray-700">Logout</a>
             <button onclick="confirmDeleteAccount()" class="text-red-500/70 hover:text-red-500 text-sm transition px-2">Delete Account</button>
         </div>

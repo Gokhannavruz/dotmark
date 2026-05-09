@@ -1,5 +1,7 @@
 import os
 import secrets
+import hmac
+import hashlib
 import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
@@ -15,11 +17,44 @@ from database import (
     get_bookmark, get_similar_bookmarks, save_deep_analysis,
     toggle_read, save_notes, save_roadmap_progress, update_bookmark_meta,
     save_mvp_prompt, delete_user,
+    get_user_by_paddle_customer, get_user_by_paddle_subscription,
+    update_subscription, update_subscription_by_sub_id,
 )
 from ai_service import categorize_bookmarks, deep_analyze, generate_mvp_prompt, generate_mvp_questions
 from x_auth import generate_code_verifier, generate_code_challenge, exchange_code_for_token, get_user_info
 
 load_dotenv()
+
+# ── Paddle client ────────────────────────────────────────────────────────────
+from paddle_billing import Client, Environment, Options
+
+_paddle_env = os.getenv("PADDLE_ENVIRONMENT", "production")
+paddle = Client(
+    os.getenv("PADDLE_API_SECRET_KEY", ""),
+    options=Options(Environment.SANDBOX if _paddle_env == "sandbox" else Environment.PRODUCTION),
+)
+PADDLE_CLIENT_TOKEN = os.getenv("PADDLE_CLIENT_TOKEN", "")
+PADDLE_WEBHOOK_SECRET = os.getenv("PADDLE_WEBHOOK_SECRET", "")
+PADDLE_PRICE_MONTHLY = os.getenv("PADDLE_PRICE_MONTHLY", "")
+PADDLE_PRICE_ANNUAL = os.getenv("PADDLE_PRICE_ANNUAL", "")
+PADDLE_SANDBOX = _paddle_env == "sandbox"
+
+
+def _verify_paddle_signature(sig_header: str, raw_body: bytes) -> bool:
+    """Verify Paddle webhook HMAC-SHA256 signature."""
+    try:
+        parts = dict(p.split("=", 1) for p in sig_header.split(";"))
+        timestamp = parts.get("ts", "")
+        paddle_sig = parts.get("h1", "")
+        payload = f"{timestamp}:{raw_body.decode('utf-8')}".encode()
+        computed = hmac.new(
+            PADDLE_WEBHOOK_SECRET.encode(),
+            msg=payload,
+            digestmod=hashlib.sha256,
+        ).hexdigest()
+        return hmac.compare_digest(computed, paddle_sig)
+    except Exception:
+        return False
 
 app = FastAPI()
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
@@ -117,9 +152,15 @@ async def dashboard(request: Request):
         cat = bm["category"] or "Other"
         categories.setdefault(cat, []).append(bm)
 
+    user = await get_user_by_id(session["user_id"])
     return templates.TemplateResponse(
         "dashboard.html",
-        {"request": request, "categories": categories, "total": len(bookmarks)},
+        {
+            "request": request,
+            "categories": categories,
+            "total": len(bookmarks),
+            "subscription_status": user.get("subscription_status", "free") if user else "free",
+        },
     )
 
 
@@ -335,6 +376,143 @@ async def export_roadmap(request: Request, tweet_id: str):
         content,
         headers={"Content-Disposition": f"attachment; filename=roadmap-{tweet_id}.md"}
     )
+
+
+@app.get("/pricing", response_class=HTMLResponse)
+async def pricing(request: Request):
+    session = get_session(request)
+    user = None
+    if session:
+        user = await get_user_by_id(session["user_id"])
+    return templates.TemplateResponse("pricing.html", {
+        "request": request,
+        "logged_in": bool(session),
+        "subscription_status": user.get("subscription_status", "free") if user else "free",
+        "paddle_client_token": PADDLE_CLIENT_TOKEN,
+        "paddle_price_monthly": PADDLE_PRICE_MONTHLY,
+        "paddle_price_annual": PADDLE_PRICE_ANNUAL,
+        "paddle_sandbox": PADDLE_SANDBOX,
+    })
+
+
+@app.post("/webhooks/paddle")
+async def paddle_webhook(request: Request):
+    sig_header = request.headers.get("Paddle-Signature", "")
+    raw_body = await request.body()
+
+    if PADDLE_WEBHOOK_SECRET and not _verify_paddle_signature(sig_header, raw_body):
+        raise HTTPException(status_code=403, detail="Invalid Paddle signature")
+
+    payload = await request.json()
+    event_type = payload.get("event_type", "")
+    data = payload.get("data", {})
+
+    # Extract common fields
+    sub_id = data.get("id") if event_type.startswith("subscription") else data.get("subscription_id")
+    customer_id = data.get("customer_id", "")
+    status = data.get("status", "")
+    next_billed_at = data.get("next_billed_at") or data.get("current_billing_period", {}).get("ends_at")
+
+    # Map Paddle status to our internal status
+    STATUS_MAP = {
+        "active": "active",
+        "trialing": "trialing",
+        "past_due": "past_due",
+        "paused": "paused",
+        "canceled": "free",
+    }
+
+    if event_type in ("subscription.created", "subscription.activated", "subscription.updated", "subscription.trialing"):
+        # Find user by customer_id
+        user = await get_user_by_paddle_customer(customer_id)
+        if not user:
+            # Try to find by custom_data user_id passed at checkout
+            custom_data = data.get("custom_data") or {}
+            user_id = custom_data.get("user_id")
+            if user_id:
+                user = await get_user_by_id(int(user_id))
+
+        if user:
+            mapped_status = STATUS_MAP.get(status, "active")
+            # Determine plan from items
+            items = data.get("items", [])
+            plan = None
+            if items:
+                price_id = items[0].get("price", {}).get("id", "")
+                if price_id == PADDLE_PRICE_ANNUAL:
+                    plan = "annual"
+                elif price_id == PADDLE_PRICE_MONTHLY:
+                    plan = "monthly"
+            await update_subscription(
+                user["id"], customer_id, sub_id or "",
+                mapped_status, plan, next_billed_at,
+            )
+
+    elif event_type in ("subscription.paused", "subscription.past_due"):
+        mapped = "paused" if event_type == "subscription.paused" else "past_due"
+        if sub_id:
+            await update_subscription_by_sub_id(sub_id, mapped, next_billed_at)
+
+    elif event_type == "subscription.canceled":
+        if sub_id:
+            await update_subscription_by_sub_id(sub_id, "free", None)
+
+    elif event_type == "subscription.resumed":
+        if sub_id:
+            await update_subscription_by_sub_id(sub_id, "active", next_billed_at)
+
+    elif event_type == "transaction.completed":
+        # Ensure subscription is marked active after successful payment
+        sub_id_from_tx = data.get("subscription_id")
+        if sub_id_from_tx:
+            await update_subscription_by_sub_id(sub_id_from_tx, "active", next_billed_at)
+
+    return {"status": "ok"}
+
+
+@app.get("/account/portal")
+async def customer_portal(request: Request):
+    """Redirect logged-in user to their Paddle customer portal."""
+    session = get_session(request)
+    if not session:
+        return RedirectResponse(url="/pricing")
+
+    user = await get_user_by_id(session["user_id"])
+    if not user or not user.get("paddle_customer_id"):
+        return RedirectResponse(url="/pricing")
+
+    paddle_api_base = (
+        "https://sandbox-api.paddle.com" if PADDLE_SANDBOX else "https://api.paddle.com"
+    )
+    customer_id = user["paddle_customer_id"]
+    sub_id = user.get("paddle_subscription_id")
+
+    body = {"subscription_ids": [sub_id]} if sub_id else {}
+    async with httpx.AsyncClient() as http:
+        resp = await http.post(
+            f"{paddle_api_base}/customers/{customer_id}/portal-sessions",
+            headers={"Authorization": f"Bearer {os.getenv('PADDLE_API_SECRET_KEY', '')}"},
+            json=body,
+        )
+
+    if resp.status_code != 201:
+        raise HTTPException(500, "Could not generate portal session")
+
+    portal_url = resp.json()["data"]["urls"]["general"]["overview"]
+    return RedirectResponse(url=portal_url)
+
+
+@app.get("/subscription/status")
+async def subscription_status(request: Request):
+    session = get_session(request)
+    if not session:
+        return JSONResponse({"status": "free"})
+    user = await get_user_by_id(session["user_id"])
+    return JSONResponse({
+        "status": user.get("subscription_status", "free") if user else "free",
+        "plan": user.get("subscription_plan") if user else None,
+        "ends_at": user.get("subscription_ends_at") if user else None,
+    })
 
 
 @app.get("/privacy", response_class=HTMLResponse)

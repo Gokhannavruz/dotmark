@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Paddle.js v2 -->
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+<script>
+  {% if paddle_sandbox %}Paddle.Environment.set("sandbox");{% endif %}
+  Paddle.Initialize({
+    token: '{{ paddle_client_token }}',
+    checkout: {
+      settings: {
+        displayMode: "overlay",
+        theme: "dark",
+        locale: "en",
+        variant: "one-page"
+      }
+    },
+    eventCallback: function(data) {
+      if (data.name === "checkout.completed") {
+        window.location.href = "/dashboard?welcome=1";
+      }
+    }
+  });
+
+  function openCheckout(priceId) {
+    {% if not logged_in %}
+    window.location.href = "/auth/login";
+    return;
+    {% endif %}
+    Paddle.Checkout.open({
+      items: [{ priceId: priceId, quantity: 1 }],
+      customData: { source: "pricing_page" }
+    });
+  }
+</script>
+
+<!-- Nav -->
+<nav class="fixed top-0 inset-x-0 z-50 h-14 flex items-center border-b border-white/[0.04] backdrop-blur-2xl bg-gray-950/75">
+  <div class="max-w-5xl mx-auto px-6 w-full flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2">
+      <img src="/assets/dotmark.png" alt="dotmark logo" class="w-6 h-6 rounded-md object-contain brightness-0 invert">
+      <span class="font-semibold text-sm tracking-tight" style="font-family:'DM Sans',sans-serif;">dotmark</span>
+    </a>
+    <div class="flex items-center gap-4">
+      {% if logged_in %}
+      <a href="/dashboard" class="text-xs text-gray-400 hover:text-white transition">Dashboard</a>
+      <a href="/account/portal" class="text-xs text-gray-400 hover:text-white transition">Manage subscription</a>
+      {% else %}
+      <a href="/auth/login" class="text-xs bg-white hover:bg-gray-100 text-black px-4 py-2 rounded-lg font-semibold transition">Sign in</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<main class="pt-28 pb-24 max-w-5xl mx-auto px-6">
+
+  <div class="text-center mb-16">
+    <p class="text-sky-500/80 text-xs font-medium uppercase tracking-[0.2em] mb-4">Pricing</p>
+    <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
+      Simple, honest pricing
+    </h1>
+    <p class="text-gray-500 text-sm font-light max-w-md mx-auto">
+      Start free. Upgrade when you're ready to unlock everything.
+    </p>
+  </div>
+
+  <!-- Billing toggle -->
+  <div class="flex items-center justify-center gap-3 mb-12">
+    <span id="label-monthly" class="text-sm text-white font-medium">Monthly</span>
+    <button id="billingToggle" onclick="toggleBilling()"
+      class="relative w-11 h-6 rounded-full bg-gray-700 transition-colors duration-200 focus:outline-none">
+      <span id="toggleDot" class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform duration-200"></span>
+    </button>
+    <span id="label-annual" class="text-sm text-gray-500">
+      Annual <span class="text-sky-400 text-xs font-semibold ml-1">Save 22%</span>
+    </span>
+  </div>
+
+  <!-- Plans grid -->
+  <div class="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+
+    <!-- Free -->
+    <div class="card-border rounded-2xl p-8 flex flex-col">
+      <div class="mb-6">
+        <p class="text-xs text-gray-500 font-medium uppercase tracking-widest mb-2">Free</p>
+        <div class="flex items-end gap-1 mb-3">
+          <span class="text-4xl font-extrabold">$0</span>
+          <span class="text-gray-500 text-sm mb-1">/month</span>
+        </div>
+        <p class="text-gray-500 text-sm font-light">Get started, no credit card needed.</p>
+      </div>
+
+      <ul class="space-y-3 mb-8 flex-1">
+        {% for item in [
+          ("Sync up to 25 bookmarks", true),
+          ("AI categorization", true),
+          ("Basic summaries", true),
+          ("Deep analysis & roadmaps", false),
+          ("MVP prompt builder", false),
+          ("Export to Markdown", false),
+          ("Priority sync", false),
+        ] %}
+        <li class="flex items-center gap-2.5 text-sm">
+          {% if item[1] %}
+          <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          <span class="text-gray-300">{{ item[0] }}</span>
+          {% else %}
+          <svg class="w-4 h-4 text-gray-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          <span class="text-gray-600">{{ item[0] }}</span>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+
+      {% if subscription_status in ("active", "trialing") %}
+      <span class="text-center text-xs text-gray-600 py-3">Current plan</span>
+      {% elif logged_in %}
+      <a href="/dashboard" class="text-center text-sm font-medium text-gray-400 border border-white/10 hover:border-white/20 rounded-xl py-3 transition">
+        Go to Dashboard
+      </a>
+      {% else %}
+      <a href="/auth/login" class="text-center text-sm font-medium text-gray-400 border border-white/10 hover:border-white/20 rounded-xl py-3 transition">
+        Get started free
+      </a>
+      {% endif %}
+    </div>
+
+    <!-- Pro -->
+    <div class="relative rounded-2xl p-8 flex flex-col"
+         style="background: linear-gradient(135deg, rgba(14,165,233,0.08) 0%, rgba(14,165,233,0.03) 100%); border: 1px solid rgba(14,165,233,0.25);">
+
+      <!-- Badge -->
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+        <span class="text-xs font-semibold px-3 py-1 rounded-full bg-sky-500 text-white">Most popular</span>
+      </div>
+
+      <div class="mb-6">
+        <p class="text-xs text-sky-400 font-medium uppercase tracking-widest mb-2">Pro</p>
+        <div class="flex items-end gap-1 mb-1">
+          <span id="price-display" class="text-4xl font-extrabold">$9</span>
+          <span id="period-display" class="text-gray-500 text-sm mb-1">/month</span>
+        </div>
+        <p id="billed-note" class="text-gray-600 text-xs mb-3 h-4"></p>
+        <p class="text-gray-400 text-sm font-light">Everything you need to act on your bookmarks.</p>
+      </div>
+
+      <ul class="space-y-3 mb-8 flex-1">
+        {% for item in [
+          "Unlimited bookmark syncs",
+          "AI categorization",
+          "Deep analysis & roadmaps",
+          "MVP prompt builder",
+          "Export to Markdown",
+          "Priority sync",
+          "Email support",
+        ] %}
+        <li class="flex items-center gap-2.5 text-sm">
+          <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          <span class="text-gray-300">{{ item }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+
+      {% if subscription_status in ("active", "trialing") %}
+      <a href="/account/portal"
+         class="text-center text-sm font-semibold bg-sky-500 hover:bg-sky-400 text-white rounded-xl py-3.5 transition">
+        Manage subscription →
+      </a>
+      {% elif subscription_status == "past_due" %}
+      <a href="/account/portal"
+         class="text-center text-sm font-semibold bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl py-3.5 transition">
+        Update payment method
+      </a>
+      {% else %}
+      <button id="checkoutBtn" onclick="openCheckout('{{ paddle_price_monthly }}')"
+        class="text-sm font-semibold bg-sky-500 hover:bg-sky-400 text-white rounded-xl py-3.5 transition">
+        {% if logged_in %}Get Pro{% else %}Sign in to upgrade{% endif %}
+      </button>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- FAQ -->
+  <div class="mt-20 max-w-2xl mx-auto">
+    <h2 class="text-xl font-bold text-center mb-8">Frequently asked questions</h2>
+    <div class="space-y-4">
+      {% set faqs = [
+        ("Can I cancel anytime?", "Yes. Cancel from the customer portal at any time. You keep Pro access until the end of your billing period."),
+        ("Is there a free trial?", "Pro includes a 14-day money-back guarantee. If you're not satisfied, contact support within 14 days for a full refund."),
+        ("What payment methods are accepted?", "All major credit and debit cards via Paddle, our payment provider. Paddle handles all billing securely."),
+        ("What happens to my data if I downgrade?", "Your bookmarks and analyses are kept. You'll only lose the ability to sync new ones beyond the 25-bookmark free limit."),
+        ("Is my payment secure?", "Yes. Payments are processed by Paddle, a registered Merchant of Record. Dotmark never stores your card details."),
+      ] %}
+      {% for q, a in faqs %}
+      <details class="group border border-white/[0.06] rounded-xl bg-white/[0.01] overflow-hidden">
+        <summary class="px-5 py-4 text-sm font-medium cursor-pointer flex justify-between items-center list-none">
+          {{ q }}
+          <svg class="w-4 h-4 text-gray-500 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <p class="px-5 pb-4 text-sm text-gray-500 font-light leading-relaxed">{{ a }}</p>
+      </details>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Trust badges -->
+  <div class="mt-14 flex flex-wrap items-center justify-center gap-6 text-xs text-gray-600">
+    <span class="flex items-center gap-1.5">
+      <svg class="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+      Secure checkout by Paddle
+    </span>
+    <span class="flex items-center gap-1.5">
+      <svg class="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      14-day money-back guarantee
+    </span>
+    <span class="flex items-center gap-1.5">
+      <svg class="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      Cancel anytime
+    </span>
+  </div>
+
+</main>
+
+<!-- Footer -->
+<footer class="border-t border-white/[0.04]">
+  <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <img src="/assets/dotmark.png" alt="dotmark logo" class="w-5 h-5 rounded object-contain brightness-0 invert">
+      <span class="text-gray-400 text-xs font-medium">dotmark</span>
+    </div>
+    <div class="flex items-center gap-6">
+      <a href="/privacy" class="text-gray-400 hover:text-gray-200 text-xs transition">Privacy Policy</a>
+      <a href="/terms" class="text-gray-400 hover:text-gray-200 text-xs transition">Terms of Service</a>
+      <a href="/refund" class="text-gray-400 hover:text-gray-200 text-xs transition">Refund Policy</a>
+    </div>
+    <p class="text-gray-500 text-xs font-light">© 2025 Dotmark. All rights reserved.</p>
+  </div>
+</footer>
+
+<script>
+  // Billing toggle logic
+  let isAnnual = false;
+  const monthlyPriceId = '{{ paddle_price_monthly }}';
+  const annualPriceId  = '{{ paddle_price_annual }}';
+
+  function toggleBilling() {
+    isAnnual = !isAnnual;
+    const dot = document.getElementById('toggleDot');
+    const toggle = document.getElementById('billingToggle');
+    const labelMonthly = document.getElementById('label-monthly');
+    const labelAnnual  = document.getElementById('label-annual');
+    const priceDisplay = document.getElementById('price-display');
+    const periodDisplay = document.getElementById('period-display');
+    const billedNote   = document.getElementById('billed-note');
+    const checkoutBtn  = document.getElementById('checkoutBtn');
+
+    if (isAnnual) {
+      dot.style.transform = 'translateX(20px)';
+      toggle.classList.replace('bg-gray-700', 'bg-sky-500');
+      labelMonthly.classList.replace('text-white', 'text-gray-500');
+      labelAnnual.classList.replace('text-gray-500', 'text-white');
+      priceDisplay.textContent = '$7';
+      periodDisplay.textContent = '/month';
+      billedNote.textContent = 'Billed $84/year';
+      if (checkoutBtn) checkoutBtn.onclick = () => openCheckout(annualPriceId);
+    } else {
+      dot.style.transform = 'translateX(0)';
+      toggle.classList.replace('bg-sky-500', 'bg-gray-700');
+      labelMonthly.classList.replace('text-gray-500', 'text-white');
+      labelAnnual.classList.replace('text-white', 'text-gray-500');
+      priceDisplay.textContent = '$9';
+      periodDisplay.textContent = '/month';
+      billedNote.textContent = '';
+      if (checkoutBtn) checkoutBtn.onclick = () => openCheckout(monthlyPriceId);
+    }
+  }
+</script>
+
+{% endblock %}

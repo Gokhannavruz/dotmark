@@ -36,7 +36,20 @@ async def init_db():
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """)
-        # Migrate existing table if columns missing
+        # Migrate users table if subscription columns missing
+        for col, definition in [
+            ("paddle_customer_id", "TEXT"),
+            ("paddle_subscription_id", "TEXT"),
+            ("subscription_status", "TEXT DEFAULT 'free'"),
+            ("subscription_plan", "TEXT"),
+            ("subscription_ends_at", "DATETIME"),
+        ]:
+            try:
+                await db.execute(f"ALTER TABLE users ADD COLUMN {col} {definition}")
+            except Exception:
+                pass
+
+        # Migrate existing bookmarks table if columns missing
         for col, definition in [
             ("content_type", "TEXT"),
             ("difficulty", "TEXT"),
@@ -248,6 +261,62 @@ async def get_bookmarks(user_id: int) -> list:
             d["key_points"] = json.loads(d["key_points"]) if d.get("key_points") else []
             result.append(d)
         return result
+
+
+async def get_user_by_paddle_customer(paddle_customer_id: str) -> dict:
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT * FROM users WHERE paddle_customer_id = ?", (paddle_customer_id,)
+        )
+        row = await cursor.fetchone()
+        return dict(row) if row else None
+
+
+async def get_user_by_paddle_subscription(paddle_subscription_id: str) -> dict:
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT * FROM users WHERE paddle_subscription_id = ?", (paddle_subscription_id,)
+        )
+        row = await cursor.fetchone()
+        return dict(row) if row else None
+
+
+async def update_subscription(
+    user_id: int,
+    paddle_customer_id: str,
+    paddle_subscription_id: str,
+    status: str,
+    plan: str = None,
+    ends_at: str = None,
+):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            """UPDATE users SET
+                paddle_customer_id = ?,
+                paddle_subscription_id = ?,
+                subscription_status = ?,
+                subscription_plan = ?,
+                subscription_ends_at = ?
+               WHERE id = ?""",
+            (paddle_customer_id, paddle_subscription_id, status, plan, ends_at, user_id),
+        )
+        await db.commit()
+
+
+async def update_subscription_by_sub_id(
+    paddle_subscription_id: str,
+    status: str,
+    ends_at: str = None,
+):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            """UPDATE users SET subscription_status = ?, subscription_ends_at = ?
+               WHERE paddle_subscription_id = ?""",
+            (status, ends_at, paddle_subscription_id),
+        )
+        await db.commit()
 
 
 async def delete_user(user_id: int):
