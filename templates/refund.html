@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Nav -->
+<nav class="fixed top-0 inset-x-0 z-50 h-14 flex items-center border-b border-white/[0.04] backdrop-blur-2xl bg-gray-950/75">
+    <div class="max-w-5xl mx-auto px-6 w-full flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2">
+            <img src="/assets/dotmark.png" alt="dotmark logo" class="w-6 h-6 rounded-md object-contain brightness-0 invert">
+            <span class="font-semibold text-sm tracking-tight" style="font-family:'DM Sans',sans-serif;">dotmark</span>
+        </a>
+        <a href="/" class="text-xs text-gray-500 hover:text-gray-300 transition">← Back to home</a>
+    </div>
+</nav>
+
+<!-- Content -->
+<main class="pt-24 pb-24 max-w-3xl mx-auto px-6">
+    <div class="mb-12">
+        <p class="text-sky-500/80 text-xs font-medium uppercase tracking-[0.2em] mb-4">Legal</p>
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">Refund Policy</h1>
+        <p class="text-gray-600 text-sm font-light">Last updated: May 9, 2025</p>
+    </div>
+
+    <div class="prose-custom space-y-10">
+
+        <section>
+            <h2>1. Overview</h2>
+            <p>At <strong>Dotmark</strong>, we want you to be satisfied with your subscription. This Refund Policy outlines the conditions under which refunds may be issued for paid plans purchased through our payment processor, <strong>Paddle</strong>.</p>
+            <p>By subscribing to a paid plan on <strong>dotmark.io</strong>, you agree to this Refund Policy.</p>
+        </section>
+
+        <section>
+            <h2>2. Subscription Plans</h2>
+            <p>Dotmark offers subscription-based access to premium features. Subscriptions are billed on a recurring basis (monthly or annually) and grant access to the Service for the duration of the billing period.</p>
+        </section>
+
+        <section>
+            <h2>3. Refund Eligibility</h2>
+            <h3>3.1 14-Day Money-Back Guarantee</h3>
+            <p>If you are not satisfied with your Dotmark subscription, you may request a full refund within <strong>14 days</strong> of your initial purchase date. This guarantee applies to first-time subscribers only and does not apply to renewals.</p>
+
+            <h3>3.2 Renewals</h3>
+            <p>Subscription renewals are generally non-refundable. If you did not intend to renew, please cancel your subscription before the renewal date. We may, at our sole discretion, issue a pro-rated or full refund for a renewal charge if you contact us within <strong>48 hours</strong> of the renewal date and have not made significant use of the Service during that period.</p>
+
+            <h3>3.3 Annual Subscriptions</h3>
+            <p>For annual subscriptions, you may request a refund within 14 days of the initial purchase. After 14 days, annual subscriptions are non-refundable; however, you may cancel at any time to prevent future renewal charges, and your access will continue until the end of the paid period.</p>
+        </section>
+
+        <section>
+            <h2>4. Non-Refundable Situations</h2>
+            <p>Refunds will <strong>not</strong> be issued in the following circumstances:</p>
+            <ul>
+                <li>Requests made after the 14-day refund window has passed (for initial purchases).</li>
+                <li>Subscription renewals (except within 48 hours as described above).</li>
+                <li>Accounts found to be in violation of our <a href="/terms">Terms of Service</a>.</li>
+                <li>Requests based on the unavailability of specific features that were never part of the subscribed plan.</li>
+                <li>Partial periods — we do not issue pro-rated refunds for unused days within a billing period (except for the 14-day window).</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>5. How to Request a Refund</h2>
+            <p>To request a refund, please contact us at <a href="mailto:support@dotmark.io">support@dotmark.io</a> with the following information:</p>
+            <ul>
+                <li>The email address associated with your Dotmark account.</li>
+                <li>Your Paddle order or transaction ID (found in your purchase confirmation email).</li>
+                <li>The reason for your refund request.</li>
+            </ul>
+            <p>We will review your request and respond within <strong>3 business days</strong>. Approved refunds are processed by Paddle and typically appear on your original payment method within 5–10 business days, depending on your bank or card issuer.</p>
+        </section>
+
+        <section>
+            <h2>6. Cancellation</h2>
+            <p>You may cancel your subscription at any time from your account settings or by contacting us at <a href="mailto:support@dotmark.io">support@dotmark.io</a>. Cancellation stops future billing but does not automatically trigger a refund. Your access to premium features will continue until the end of your current billing period.</p>
+        </section>
+
+        <section>
+            <h2>7. Chargebacks</h2>
+            <p>If you initiate a chargeback with your bank or credit card provider instead of contacting us first, we reserve the right to suspend or terminate your account pending resolution. We encourage you to reach out to us directly — we are committed to resolving issues fairly and promptly.</p>
+        </section>
+
+        <section>
+            <h2>8. Changes to This Policy</h2>
+            <p>We reserve the right to modify this Refund Policy at any time. Material changes will be communicated by updating the "Last updated" date on this page. Continued use of the Service after changes constitutes acceptance of the updated policy.</p>
+        </section>
+
+        <section>
+            <h2>9. Contact Us</h2>
+            <p>If you have any questions about this Refund Policy, please contact us at:</p>
+            <p><strong>Email:</strong> <a href="mailto:support@dotmark.io">support@dotmark.io</a></p>
+        </section>
+
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="border-t border-white/[0.04]">
+    <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+            <img src="/assets/dotmark.png" alt="dotmark logo" class="w-5 h-5 rounded object-contain brightness-0 invert">
+            <span class="text-gray-400 text-xs font-medium">dotmark</span>
+        </div>
+        <div class="flex items-center gap-6">
+            <a href="/privacy" class="text-gray-400 hover:text-gray-200 text-xs transition">Privacy Policy</a>
+            <a href="/terms" class="text-gray-400 hover:text-gray-200 text-xs transition">Terms of Service</a>
+            <a href="/refund" class="text-gray-400 hover:text-gray-200 text-xs transition">Refund Policy</a>
+        </div>
+        <p class="text-gray-500 text-xs font-light">© 2025 Dotmark. All rights reserved.</p>
+    </div>
+</footer>
+
+<style>
+.prose-custom h2 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.prose-custom h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+.prose-custom p {
+    color: #6b7280;
+    font-size: 0.875rem;
+    line-height: 1.75;
+    margin-bottom: 0.75rem;
+    font-weight: 300;
+}
+.prose-custom ul {
+    list-style: none;
+    padding: 0;
+    margin: 0.75rem 0;
+}
+.prose-custom ul li {
+    color: #6b7280;
+    font-size: 0.875rem;
+    line-height: 1.75;
+    font-weight: 300;
+    padding-left: 1.25rem;
+    position: relative;
+    margin-bottom: 0.35rem;
+}
+.prose-custom ul li::before {
+    content: '–';
+    position: absolute;
+    left: 0;
+    color: #374151;
+}
+.prose-custom a {
+    color: #38bdf8;
+    text-decoration: none;
+}
+.prose-custom a:hover {
+    text-decoration: underline;
+}
+.prose-custom strong {
+    color: #d1d5db;
+    font-weight: 600;
+}
+section {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.01);
+}
+</style>
+
+{% endblock %}

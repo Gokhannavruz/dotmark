@@ -347,6 +347,11 @@ async def terms(request: Request):
     return templates.TemplateResponse("terms.html", {"request": request})
 
 
+@app.get("/refund", response_class=HTMLResponse)
+async def refund(request: Request):
+    return templates.TemplateResponse("refund.html", {"request": request})
+
+
 @app.post("/account/delete")
 async def delete_account(request: Request):
     session = get_session(request)
