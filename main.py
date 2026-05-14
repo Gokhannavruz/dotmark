@@ -125,6 +125,12 @@ async def _do_sync(user_id: int, access_token: str) -> dict:
 _SECURE_COOKIE = os.getenv("REDIRECT_URI", "").startswith("https")
 
 
+@app.get("/health")
+async def health_check():
+    """Lightweight endpoint for uptime monitoring — no DB/AI calls."""
+    return {"status": "ok"}
+
+
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     session = get_session(request)
