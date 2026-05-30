@@ -17,7 +17,23 @@
     },
     eventCallback: function(data) {
       if (data.name === "checkout.completed") {
-        window.location.href = "/dashboard?welcome=1";
+        // Extract checkout details from Paddle
+        const d = data.data || {};
+        // Immediately tell our server to activate Pro BEFORE redirect
+        fetch('/checkout/complete', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            transaction_id: d.id || d.transaction_id || '',
+            subscription_id: d.subscription_id || '',
+            customer_id: d.customer_id || ''
+          })
+        }).then(() => {
+          window.location.href = "/dashboard?welcome=1";
+        }).catch(() => {
+          // Even if the call fails, redirect — polling will handle it
+          window.location.href = "/dashboard?welcome=1";
+        });
       }
     }
   });

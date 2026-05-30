@@ -623,6 +623,46 @@ async def customer_portal(request: Request):
     return RedirectResponse(url=portal_url)
 
 
+@app.post("/checkout/complete")
+async def checkout_complete(request: Request):
+    """Called by frontend immediately after Paddle checkout completes.
+    Activates Pro BEFORE the user is redirected to dashboard."""
+    session = get_session(request)
+    if not session:
+        return JSONResponse({"error": "Not logged in"}, status_code=401)
+
+    body = await request.json()
+    txn_id = body.get("transaction_id", "")
+    sub_id = body.get("subscription_id", "")
+    customer_id = body.get("customer_id", "")
+    user_id = session["user_id"]
+    plan = None
+
+    # Try to enrich with Paddle API data (non-blocking if it fails)
+    try:
+        if txn_id:
+            txn = paddle.transactions.get(txn_id)
+            if txn:
+                sub_id = sub_id or getattr(txn, "subscription_id", "") or ""
+                customer_id = customer_id or getattr(txn, "customer_id", "") or ""
+                items = getattr(txn, "items", []) or []
+                if items:
+                    price = getattr(items[0], "price", None)
+                    price_id = getattr(price, "id", "") if price else ""
+                    if price_id == PADDLE_PRICE_ANNUAL:
+                        plan = "annual"
+                    elif price_id == PADDLE_PRICE_MONTHLY:
+                        plan = "monthly"
+    except Exception as e:
+        print(f"[CHECKOUT COMPLETE] Paddle API enrichment failed (non-blocking): {e}")
+
+    # IMMEDIATELY activate the user — this is the critical line
+    await update_subscription(user_id, customer_id, sub_id, "active", plan, None)
+    print(f"[CHECKOUT COMPLETE] User {user_id} activated as Pro (plan={plan}, txn={txn_id})")
+
+    return JSONResponse({"status": "active", "plan": plan})
+
+
 @app.get("/subscription/status")
 async def subscription_status(request: Request):
     session = get_session(request)
@@ -632,7 +672,7 @@ async def subscription_status(request: Request):
     status = user.get("subscription_status", "free") if user else "free"
     plan = user.get("subscription_plan") if user else None
     ends_at = user.get("subscription_ends_at") if user else None
-    
+
     # Direct Paddle sync fallback if local DB states free
     if status == "free":
         sync_res = await sync_subscription_with_paddle(session["user_id"])
@@ -640,7 +680,7 @@ async def subscription_status(request: Request):
             status = sync_res["status"]
             plan = sync_res.get("plan")
             ends_at = sync_res.get("ends_at")
-            
+
     return JSONResponse({
         "status": status,
         "plan": plan,
