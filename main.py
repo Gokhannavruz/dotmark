@@ -486,17 +486,20 @@ async def paddle_webhook(request: Request):
     if PADDLE_WEBHOOK_SECRET:
         try:
             # Build a simple request-like object the SDK expects
+            # IMPORTANT: Use request.headers directly (Starlette Headers = case-insensitive)
+            # NOT dict(request.headers) which lowercases keys and breaks "Paddle-Signature" lookup
             class _Req:
                 def __init__(self, headers, body):
                     self.headers = headers
                     self.body = body
             
-            sdk_request = _Req(dict(request.headers), raw_body)
+            sdk_request = _Req(request.headers, raw_body)
             secret = Secret(PADDLE_WEBHOOK_SECRET.strip())
             is_valid = _paddle_verifier.verify(sdk_request, secret, verify_time_drift=False)
             if not is_valid:
                 print("[WEBHOOK] Paddle signature verification FAILED")
                 raise HTTPException(status_code=403, detail="Invalid Paddle signature")
+            print("[WEBHOOK] Paddle signature verification PASSED ✓")
         except HTTPException:
             raise
         except Exception as e:
