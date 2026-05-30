@@ -1,7 +1,8 @@
+import os
 import aiosqlite
 import json
 
-DB_PATH = "bookmarks.db"
+DB_PATH = os.getenv("DATABASE_PATH", "bookmarks.db")
 
 
 async def init_db():
