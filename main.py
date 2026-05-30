@@ -132,6 +132,65 @@ async def _do_sync(user_id: int, access_token: str) -> dict:
     return {"count": len(all_tweets), "new": len(new_tweets)}
 
 
+async def sync_subscription_with_paddle(user_id: int) -> dict:
+    """Fallback mechanism: Query Paddle API directly for this user's active/trialing subscriptions."""
+    paddle_api_secret = os.getenv("PADDLE_API_SECRET_KEY", "").strip()
+    if not paddle_api_secret:
+        return {"status": "free"}
+
+    paddle_env = os.getenv("PADDLE_ENVIRONMENT", "production").strip()
+    paddle_api_base = (
+        "https://sandbox-api.paddle.com" if paddle_env == "sandbox" else "https://api.paddle.com"
+    )
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"{paddle_api_base}/subscriptions",
+                headers={"Authorization": f"Bearer {paddle_api_secret}"},
+                params={"status": "active,trialing", "per_page": 20},
+                timeout=5.0
+            )
+            if resp.status_code == 200:
+                payload = resp.json()
+                subscriptions = payload.get("data", [])
+                
+                for sub in subscriptions:
+                    custom_data = sub.get("custom_data") or {}
+                    sub_user_id = custom_data.get("user_id")
+                    
+                    if str(sub_user_id) == str(user_id):
+                        # Found a match! Let's provision their Pro account in the DB
+                        customer_id = sub.get("customer_id")
+                        sub_id = sub.get("id")
+                        status = sub.get("status", "active")
+                        next_billed_at = sub.get("current_billing_period", {}).get("ends_at")
+                        
+                        # Mapped plan determination
+                        items = sub.get("items", [])
+                        plan = None
+                        if items:
+                            price_id = items[0].get("price", {}).get("id", "")
+                            if price_id == os.getenv("PADDLE_PRICE_ANNUAL"):
+                                plan = "annual"
+                            elif price_id == os.getenv("PADDLE_PRICE_MONTHLY"):
+                                plan = "monthly"
+                                
+                        await update_subscription(
+                            user_id, customer_id or "", sub_id or "",
+                            status, plan, next_billed_at,
+                        )
+                        return {
+                            "status": status,
+                            "plan": plan,
+                            "ends_at": next_billed_at
+                        }
+    except Exception as e:
+        print(f"[DEBUG DIRECT SYNC] Direct sync exception: {str(e)}")
+        
+    return {"status": "free"}
+
+
 # ── Routes ──────────────────────────────────────────────────────────────────
 
 _SECURE_COOKIE = os.getenv("REDIRECT_URI", "").startswith("https")
@@ -225,13 +284,20 @@ async def dashboard(request: Request):
         categories.setdefault(cat, []).append(bm)
 
     user = await get_user_by_id(session["user_id"])
+    status = user.get("subscription_status", "free") if user else "free"
+    
+    if status == "free":
+        sync_res = await sync_subscription_with_paddle(session["user_id"])
+        if sync_res["status"] in ("active", "trialing"):
+            status = sync_res["status"]
+
     return templates.TemplateResponse(
         "dashboard.html",
         {
             "request": request,
             "categories": categories,
             "total": len(bookmarks),
-            "subscription_status": user.get("subscription_status", "free") if user else "free",
+            "subscription_status": status,
         },
     )
 
@@ -563,10 +629,22 @@ async def subscription_status(request: Request):
     if not session:
         return JSONResponse({"status": "free"})
     user = await get_user_by_id(session["user_id"])
+    status = user.get("subscription_status", "free") if user else "free"
+    plan = user.get("subscription_plan") if user else None
+    ends_at = user.get("subscription_ends_at") if user else None
+    
+    # Direct Paddle sync fallback if local DB states free
+    if status == "free":
+        sync_res = await sync_subscription_with_paddle(session["user_id"])
+        if sync_res["status"] in ("active", "trialing"):
+            status = sync_res["status"]
+            plan = sync_res.get("plan")
+            ends_at = sync_res.get("ends_at")
+            
     return JSONResponse({
-        "status": user.get("subscription_status", "free") if user else "free",
-        "plan": user.get("subscription_plan") if user else None,
-        "ends_at": user.get("subscription_ends_at") if user else None,
+        "status": status,
+        "plan": plan,
+        "ends_at": ends_at,
     })
 
 
