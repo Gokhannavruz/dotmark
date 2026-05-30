@@ -248,8 +248,11 @@
   const monthlyPriceId = '{{ paddle_price_monthly }}';
   const annualPriceId  = '{{ paddle_price_annual }}';
 
-  function toggleBilling() {
-    isAnnual = !isAnnual;
+  let monthlyPriceString = '$9';
+  let annualPriceString = '$7';
+  let annualBilledNoteString = 'Billed $84/year';
+
+  function updatePricingUI() {
     const dot = document.getElementById('toggleDot');
     const toggle = document.getElementById('billingToggle');
     const labelMonthly = document.getElementById('label-monthly');
@@ -264,20 +267,79 @@
       toggle.classList.replace('bg-gray-700', 'bg-sky-500');
       labelMonthly.classList.replace('text-white', 'text-gray-500');
       labelAnnual.classList.replace('text-gray-500', 'text-white');
-      priceDisplay.textContent = '$7';
+      priceDisplay.textContent = annualPriceString;
       periodDisplay.textContent = '/month';
-      billedNote.textContent = 'Billed $84/year';
+      billedNote.textContent = annualBilledNoteString;
       if (checkoutBtn) checkoutBtn.onclick = () => openCheckout(annualPriceId);
     } else {
       dot.style.transform = 'translateX(0)';
       toggle.classList.replace('bg-sky-500', 'bg-gray-700');
       labelMonthly.classList.replace('text-gray-500', 'text-white');
       labelAnnual.classList.replace('text-white', 'text-gray-500');
-      priceDisplay.textContent = '$9';
+      priceDisplay.textContent = monthlyPriceString;
       periodDisplay.textContent = '/month';
       billedNote.textContent = '';
       if (checkoutBtn) checkoutBtn.onclick = () => openCheckout(monthlyPriceId);
     }
+  }
+
+  function toggleBilling() {
+    isAnnual = !isAnnual;
+    updatePricingUI();
+  }
+
+  // Fetch localized pricing dynamically from Paddle Catalog on load
+  if (typeof Paddle !== 'undefined' && monthlyPriceId && annualPriceId) {
+    Paddle.PricePreview({
+      items: [
+        { priceId: monthlyPriceId, quantity: 1 },
+        { priceId: annualPriceId, quantity: 1 }
+      ]
+    }).then((result) => {
+      const lineItems = result.data.details.lineItems;
+      let monthlyPrice = '';
+      let annualPrice = '';
+      let annualTotal = '';
+
+      const currencyCode = result.data.currencyCode || 'USD';
+
+      lineItems.forEach((item) => {
+        if (item.price.id === monthlyPriceId) {
+          monthlyPrice = item.formattedTotals.subtotal;
+        } else if (item.price.id === annualPriceId) {
+          annualTotal = item.formattedTotals.subtotal;
+          
+          // Calculate localized monthly equivalent for the annual plan (e.g. $84/12 = $7)
+          const rawAnnualSubtotal = item.totals.subtotal;
+          const zeroDecimalCurrencies = ['JPY', 'KRW', 'CLP', 'VND'];
+          const divisor = zeroDecimalCurrencies.includes(currencyCode) ? 1 : 100;
+          
+          const numericTotal = rawAnnualSubtotal / divisor;
+          const numericMonthly = numericTotal / 12;
+
+          try {
+            const formatter = new Intl.NumberFormat(navigator.language || 'en-US', {
+              style: 'currency',
+              currency: currencyCode,
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 2
+            });
+            annualPrice = formatter.format(numericMonthly);
+          } catch (e) {
+            const symbol = currencyCode === 'EUR' ? '€' : '$';
+            annualPrice = symbol + Math.round(numericMonthly);
+          }
+        }
+      });
+
+      if (monthlyPrice) monthlyPriceString = monthlyPrice;
+      if (annualPrice) annualPriceString = annualPrice;
+      if (annualTotal) annualBilledNoteString = `Billed ${annualTotal}/year`;
+
+      updatePricingUI();
+    }).catch((err) => {
+      console.error("Failed to load prices dynamically from Paddle:", err);
+    });
   }
 </script>
 
