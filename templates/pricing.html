@@ -29,7 +29,10 @@
     {% endif %}
     Paddle.Checkout.open({
       items: [{ priceId: priceId, quantity: 1 }],
-      customData: { source: "pricing_page" }
+      customData: {
+        user_id: "{{ user_id }}",
+        source: "pricing_page"
+      }
     });
   }
 </script>

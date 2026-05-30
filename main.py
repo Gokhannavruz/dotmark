@@ -417,6 +417,7 @@ async def pricing(request: Request):
     return templates.TemplateResponse("pricing.html", {
         "request": request,
         "logged_in": bool(session),
+        "user_id": session["user_id"] if session else None,
         "subscription_status": user.get("subscription_status", "free") if user else "free",
         "paddle_client_token": PADDLE_CLIENT_TOKEN,
         "paddle_price_monthly": PADDLE_PRICE_MONTHLY,
