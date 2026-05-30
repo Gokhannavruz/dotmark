@@ -193,7 +193,7 @@ All user preferences:
 
 Write the entire prompt and all explanations in English.
 
-Generate a complete MVP development prompt to be pasted directly into Claude Code or another AI coding assistant.
+Generate a complete MVP development prompt to be pasted directly into an AI coding assistant.
 
 Format:
 ---
@@ -221,7 +221,7 @@ Format:
 [What to build first, what next — sequential steps]
 
 ---
-## 🤖 Prompt to Paste into Claude Code
+## 🤖 Prompt to Paste into your AI Coding Assistant
 
 [Single-use, all-inclusive, unambiguous, ready-to-run prompt.
 Include state management, navigation, all screens, auth (if requested), database integration.]
