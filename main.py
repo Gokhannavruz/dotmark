@@ -48,13 +48,25 @@ def _verify_paddle_signature(sig_header: str, raw_body: bytes) -> bool:
         timestamp = parts.get("ts", "")
         paddle_sig = parts.get("h1", "")
         payload = f"{timestamp}:".encode() + raw_body
+        
+        # Clean secret of any accidental trailing spaces/newlines
+        clean_secret = PADDLE_WEBHOOK_SECRET.strip()
+        
         computed = hmac.new(
-            PADDLE_WEBHOOK_SECRET.encode(),
+            clean_secret.encode(),
             msg=payload,
             digestmod=hashlib.sha256,
         ).hexdigest()
+        
+        # Diagnostic logging for Render dashboard logs
+        print(f"[DEBUG WEBHOOK] Raw secret length: {len(PADDLE_WEBHOOK_SECRET)}")
+        print(f"[DEBUG WEBHOOK] Cleaned secret length: {len(clean_secret)}")
+        print(f"[DEBUG WEBHOOK] Received sig prefix: {paddle_sig[:10]}...")
+        print(f"[DEBUG WEBHOOK] Computed sig prefix: {computed[:10]}...")
+        
         return hmac.compare_digest(computed, paddle_sig)
-    except Exception:
+    except Exception as e:
+        print(f"[DEBUG WEBHOOK] Error: {str(e)}")
         return False
 
 app = FastAPI()
