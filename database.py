@@ -1,79 +1,196 @@
 import os
 import aiosqlite
+import asyncpg
 import json
 
+DATABASE_URL = os.getenv("DATABASE_URL")
+IS_POSTGRES = DATABASE_URL and (DATABASE_URL.startswith("postgres://") or DATABASE_URL.startswith("postgresql://"))
 DB_PATH = os.getenv("DATABASE_PATH", "bookmarks.db")
+
+def _translate_query(query: str, params: tuple) -> str:
+    """Translates SQLite '?' placeholders to PostgreSQL '$1, $2, ...' placeholders."""
+    if not IS_POSTGRES:
+        return query
+    new_query = []
+    placeholder_idx = 1
+    for char in query:
+        if char == '?':
+            new_query.append(f"${placeholder_idx}")
+            placeholder_idx += 1
+        else:
+            new_query.append(char)
+    return "".join(new_query)
+
+class PostgresCursor:
+    def __init__(self, rows):
+        self.rows = rows
+        self.idx = 0
+
+    async def fetchone(self):
+        if self.idx < len(self.rows):
+            row = self.rows[self.idx]
+            self.idx += 1
+            return row
+        return None
+
+    async def fetchall(self):
+        return self.rows
+
+class PostgresConnection:
+    def __init__(self, conn):
+        self.conn = conn
+        self.row_factory = None
+
+    async def execute(self, query: str, params: tuple = ()):
+        translated_query = _translate_query(query, params)
+        if "SELECT" in query.upper():
+            records = await self.conn.fetch(translated_query, *params)
+            rows = [dict(r) for r in records]
+            return PostgresCursor(rows)
+        else:
+            await self.conn.execute(translated_query, *params)
+            return PostgresCursor([])
+
+    async def commit(self):
+        pass  # asyncpg auto-commits standard operations
+
+class db_connection:
+    def __init__(self):
+        self.conn = None
+        self.pg_conn = None
+
+    async def __aenter__(self):
+        if IS_POSTGRES:
+            url = DATABASE_URL
+            if url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql://", 1)
+            self.pg_conn = await asyncpg.connect(url)
+            return PostgresConnection(self.pg_conn)
+        else:
+            self.conn = await aiosqlite.connect(DB_PATH)
+            return self.conn
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if self.pg_conn:
+            await self.pg_conn.close()
+        if self.conn:
+            await self.conn.close()
 
 
 async def init_db():
-    async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                x_user_id TEXT UNIQUE,
-                username TEXT,
-                access_token TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS bookmarks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                tweet_id TEXT,
-                text TEXT,
-                category TEXT,
-                subcategory TEXT,
-                content_type TEXT,
-                difficulty TEXT,
-                action TEXT,
-                summary TEXT,
-                key_points TEXT,
-                tags TEXT,
-                priority INTEGER DEFAULT 3,
-                is_evergreen INTEGER DEFAULT 1,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, tweet_id),
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            )
-        """)
-        # Migrate users table if subscription/sync columns missing
-        for col, definition in [
-            ("paddle_customer_id", "TEXT"),
-            ("paddle_subscription_id", "TEXT"),
-            ("subscription_status", "TEXT DEFAULT 'free'"),
-            ("subscription_plan", "TEXT"),
-            ("subscription_ends_at", "DATETIME"),
-            ("last_synced_at", "DATETIME"),
-        ]:
-            try:
-                await db.execute(f"ALTER TABLE users ADD COLUMN {col} {definition}")
-            except Exception:
-                pass
+    async with db_connection() as db:
+        if IS_POSTGRES:
+            # PostgreSQL Schema
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    x_user_id TEXT UNIQUE,
+                    username TEXT,
+                    access_token TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    paddle_customer_id TEXT,
+                    paddle_subscription_id TEXT,
+                    subscription_status TEXT DEFAULT 'free',
+                    subscription_plan TEXT,
+                    subscription_ends_at TIMESTAMP,
+                    last_synced_at TIMESTAMP
+                )
+            """)
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS bookmarks (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id),
+                    tweet_id TEXT,
+                    text TEXT,
+                    category TEXT,
+                    subcategory TEXT,
+                    content_type TEXT,
+                    difficulty TEXT,
+                    action TEXT,
+                    summary TEXT,
+                    key_points TEXT,
+                    tags TEXT,
+                    priority INTEGER DEFAULT 3,
+                    is_evergreen INTEGER DEFAULT 1,
+                    deep_analysis TEXT,
+                    is_read INTEGER DEFAULT 0,
+                    read_at TIMESTAMP,
+                    notes TEXT,
+                    roadmap_progress TEXT,
+                    mvp_prompt TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, tweet_id)
+                )
+            """)
+        else:
+            # SQLite Schema
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    x_user_id TEXT UNIQUE,
+                    username TEXT,
+                    access_token TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            await db.execute("""
+                CREATE TABLE IF NOT EXISTS bookmarks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    tweet_id TEXT,
+                    text TEXT,
+                    category TEXT,
+                    subcategory TEXT,
+                    content_type TEXT,
+                    difficulty TEXT,
+                    action TEXT,
+                    summary TEXT,
+                    key_points TEXT,
+                    tags TEXT,
+                    priority INTEGER DEFAULT 3,
+                    is_evergreen INTEGER DEFAULT 1,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, tweet_id),
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                )
+            """)
+            # Migrate users table if subscription/sync columns missing
+            for col, definition in [
+                ("paddle_customer_id", "TEXT"),
+                ("paddle_subscription_id", "TEXT"),
+                ("subscription_status", "TEXT DEFAULT 'free'"),
+                ("subscription_plan", "TEXT"),
+                ("subscription_ends_at", "DATETIME"),
+                ("last_synced_at", "DATETIME"),
+            ]:
+                try:
+                    await db.execute(f"ALTER TABLE users ADD COLUMN {col} {definition}")
+                except Exception:
+                    pass
 
-        # Migrate existing bookmarks table if columns missing
-        for col, definition in [
-            ("content_type", "TEXT"),
-            ("difficulty", "TEXT"),
-            ("action", "TEXT"),
-            ("key_points", "TEXT"),
-            ("is_evergreen", "INTEGER DEFAULT 1"),
-            ("deep_analysis", "TEXT"),
-            ("is_read", "INTEGER DEFAULT 0"),
-            ("read_at", "DATETIME"),
-            ("notes", "TEXT"),
-            ("roadmap_progress", "TEXT"),
-            ("mvp_prompt", "TEXT"),
-        ]:
-            try:
-                await db.execute(f"ALTER TABLE bookmarks ADD COLUMN {col} {definition}")
-            except Exception:
-                pass
+            # Migrate existing bookmarks table if columns missing
+            for col, definition in [
+                ("content_type", "TEXT"),
+                ("difficulty", "TEXT"),
+                ("action", "TEXT"),
+                ("key_points", "TEXT"),
+                ("is_evergreen", "INTEGER DEFAULT 1"),
+                ("deep_analysis", "TEXT"),
+                ("is_read", "INTEGER DEFAULT 0"),
+                ("read_at", "DATETIME"),
+                ("notes", "TEXT"),
+                ("roadmap_progress", "TEXT"),
+                ("mvp_prompt", "TEXT"),
+            ]:
+                try:
+                    await db.execute(f"ALTER TABLE bookmarks ADD COLUMN {col} {definition}")
+                except Exception:
+                    pass
         await db.commit()
 
 
 async def save_user(x_user_id: str, username: str, access_token: str) -> int:
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         await db.execute(
             """
             INSERT INTO users (x_user_id, username, access_token)
@@ -93,7 +210,7 @@ async def save_user(x_user_id: str, username: str, access_token: str) -> int:
 
 
 async def get_user_by_id(user_id: int) -> dict:
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         db.row_factory = aiosqlite.Row
         cursor = await db.execute("SELECT * FROM users WHERE id = ?", (user_id,))
         row = await cursor.fetchone()
@@ -101,7 +218,7 @@ async def get_user_by_id(user_id: int) -> dict:
 
 
 async def save_bookmarks(user_id: int, bookmarks: list):
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         for bm in bookmarks:
             await db.execute(
                 """
@@ -142,7 +259,7 @@ async def save_bookmarks(user_id: int, bookmarks: list):
 
 
 async def get_bookmark(user_id: int, tweet_id: str) -> dict | None:
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         db.row_factory = aiosqlite.Row
         cursor = await db.execute(
             "SELECT * FROM bookmarks WHERE user_id = ? AND tweet_id = ?",
@@ -161,7 +278,7 @@ async def get_bookmark(user_id: int, tweet_id: str) -> dict | None:
 
 
 async def get_similar_bookmarks(user_id: int, tweet_id: str, category: str, tags: list) -> list:
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         db.row_factory = aiosqlite.Row
         cursor = await db.execute(
             """
@@ -183,7 +300,7 @@ async def get_similar_bookmarks(user_id: int, tweet_id: str, category: str, tags
 
 
 async def save_deep_analysis(user_id: int, tweet_id: str, analysis: dict):
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         await db.execute(
             "UPDATE bookmarks SET deep_analysis = ? WHERE user_id = ? AND tweet_id = ?",
             (json.dumps(analysis), user_id, tweet_id),
@@ -192,7 +309,7 @@ async def save_deep_analysis(user_id: int, tweet_id: str, analysis: dict):
 
 
 async def toggle_read(user_id: int, tweet_id: str) -> bool:
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         cursor = await db.execute(
             "SELECT is_read FROM bookmarks WHERE user_id = ? AND tweet_id = ?",
             (user_id, tweet_id),
@@ -209,7 +326,7 @@ async def toggle_read(user_id: int, tweet_id: str) -> bool:
 
 
 async def save_notes(user_id: int, tweet_id: str, notes: str):
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         await db.execute(
             "UPDATE bookmarks SET notes = ? WHERE user_id = ? AND tweet_id = ?",
             (notes, user_id, tweet_id),
@@ -218,7 +335,7 @@ async def save_notes(user_id: int, tweet_id: str, notes: str):
 
 
 async def save_roadmap_progress(user_id: int, tweet_id: str, progress: dict):
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         await db.execute(
             "UPDATE bookmarks SET roadmap_progress = ? WHERE user_id = ? AND tweet_id = ?",
             (json.dumps(progress), user_id, tweet_id),
@@ -227,7 +344,7 @@ async def save_roadmap_progress(user_id: int, tweet_id: str, progress: dict):
 
 
 async def save_mvp_prompt(user_id: int, tweet_id: str, prompt: str):
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         await db.execute(
             "UPDATE bookmarks SET mvp_prompt = ? WHERE user_id = ? AND tweet_id = ?",
             (prompt, user_id, tweet_id),
@@ -236,7 +353,7 @@ async def save_mvp_prompt(user_id: int, tweet_id: str, prompt: str):
 
 
 async def update_bookmark_meta(user_id: int, tweet_id: str, category: str, difficulty: str, priority: int):
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         await db.execute(
             """UPDATE bookmarks SET category = ?, difficulty = ?, priority = ?
                WHERE user_id = ? AND tweet_id = ?""",
@@ -246,7 +363,7 @@ async def update_bookmark_meta(user_id: int, tweet_id: str, category: str, diffi
 
 
 async def get_bookmarks(user_id: int) -> list:
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         db.row_factory = aiosqlite.Row
         cursor = await db.execute(
             """
@@ -266,7 +383,7 @@ async def get_bookmarks(user_id: int) -> list:
 
 
 async def count_bookmarks(user_id: int) -> int:
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         cursor = await db.execute(
             "SELECT COUNT(*) FROM bookmarks WHERE user_id = ?", (user_id,)
         )
@@ -275,7 +392,7 @@ async def count_bookmarks(user_id: int) -> int:
 
 
 async def get_existing_tweet_ids(user_id: int) -> set:
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         cursor = await db.execute(
             "SELECT tweet_id FROM bookmarks WHERE user_id = ?", (user_id,)
         )
@@ -284,7 +401,7 @@ async def get_existing_tweet_ids(user_id: int) -> set:
 
 
 async def update_last_synced(user_id: int):
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         await db.execute(
             "UPDATE users SET last_synced_at = CURRENT_TIMESTAMP WHERE id = ?", (user_id,)
         )
@@ -292,7 +409,7 @@ async def update_last_synced(user_id: int):
 
 
 async def get_user_by_paddle_customer(paddle_customer_id: str) -> dict:
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         db.row_factory = aiosqlite.Row
         cursor = await db.execute(
             "SELECT * FROM users WHERE paddle_customer_id = ?", (paddle_customer_id,)
@@ -302,7 +419,7 @@ async def get_user_by_paddle_customer(paddle_customer_id: str) -> dict:
 
 
 async def get_user_by_paddle_subscription(paddle_subscription_id: str) -> dict:
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         db.row_factory = aiosqlite.Row
         cursor = await db.execute(
             "SELECT * FROM users WHERE paddle_subscription_id = ?", (paddle_subscription_id,)
@@ -319,7 +436,7 @@ async def update_subscription(
     plan: str = None,
     ends_at: str = None,
 ):
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         await db.execute(
             """UPDATE users SET
                 paddle_customer_id = ?,
@@ -338,7 +455,7 @@ async def update_subscription_by_sub_id(
     status: str,
     ends_at: str = None,
 ):
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         await db.execute(
             """UPDATE users SET subscription_status = ?, subscription_ends_at = ?
                WHERE paddle_subscription_id = ?""",
@@ -348,7 +465,7 @@ async def update_subscription_by_sub_id(
 
 
 async def delete_user(user_id: int):
-    async with aiosqlite.connect(DB_PATH) as db:
+    async with db_connection() as db:
         # First delete all user's bookmarks
         await db.execute("DELETE FROM bookmarks WHERE user_id = ?", (user_id,))
         # Then delete the user
