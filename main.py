@@ -1,7 +1,5 @@
 import os
 import secrets
-import hmac
-import hashlib
 import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
@@ -28,6 +26,7 @@ load_dotenv()
 
 # ── Paddle client ────────────────────────────────────────────────────────────
 from paddle_billing import Client, Environment, Options
+from paddle_billing.Notifications import Verifier, Secret
 
 _paddle_env = os.getenv("PADDLE_ENVIRONMENT", "production")
 paddle = Client(
@@ -40,34 +39,9 @@ PADDLE_PRICE_MONTHLY = os.getenv("PADDLE_PRICE_MONTHLY", "")
 PADDLE_PRICE_ANNUAL = os.getenv("PADDLE_PRICE_ANNUAL", "")
 PADDLE_SANDBOX = _paddle_env == "sandbox"
 
+# Official Paddle webhook verifier
+_paddle_verifier = Verifier()
 
-def _verify_paddle_signature(sig_header: str, raw_body: bytes) -> bool:
-    """Verify Paddle webhook HMAC-SHA256 signature."""
-    try:
-        parts = dict(p.split("=", 1) for p in sig_header.split(";"))
-        timestamp = parts.get("ts", "")
-        paddle_sig = parts.get("h1", "")
-        payload = f"{timestamp}:".encode() + raw_body
-        
-        # Clean secret of any accidental trailing spaces/newlines
-        clean_secret = PADDLE_WEBHOOK_SECRET.strip()
-        
-        computed = hmac.new(
-            clean_secret.encode(),
-            msg=payload,
-            digestmod=hashlib.sha256,
-        ).hexdigest()
-        
-        # Diagnostic logging for Render dashboard logs
-        print(f"[DEBUG WEBHOOK] Raw secret length: {len(PADDLE_WEBHOOK_SECRET)}")
-        print(f"[DEBUG WEBHOOK] Cleaned secret length: {len(clean_secret)}")
-        print(f"[DEBUG WEBHOOK] Received sig prefix: {paddle_sig[:10]}...")
-        print(f"[DEBUG WEBHOOK] Computed sig prefix: {computed[:10]}...")
-        
-        return hmac.compare_digest(computed, paddle_sig)
-    except Exception as e:
-        print(f"[DEBUG WEBHOOK] Error: {str(e)}")
-        return False
 
 app = FastAPI()
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
@@ -506,11 +480,28 @@ async def pricing(request: Request):
 
 @app.post("/webhooks/paddle")
 async def paddle_webhook(request: Request):
-    sig_header = request.headers.get("Paddle-Signature", "")
     raw_body = await request.body()
 
-    if PADDLE_WEBHOOK_SECRET and not _verify_paddle_signature(sig_header, raw_body):
-        raise HTTPException(status_code=403, detail="Invalid Paddle signature")
+    # Use official Paddle SDK verifier
+    if PADDLE_WEBHOOK_SECRET:
+        try:
+            # Build a simple request-like object the SDK expects
+            class _Req:
+                def __init__(self, headers, body):
+                    self.headers = headers
+                    self.body = body
+            
+            sdk_request = _Req(dict(request.headers), raw_body)
+            secret = Secret(PADDLE_WEBHOOK_SECRET.strip())
+            is_valid = _paddle_verifier.verify(sdk_request, secret, verify_time_drift=False)
+            if not is_valid:
+                print("[WEBHOOK] Paddle signature verification FAILED")
+                raise HTTPException(status_code=403, detail="Invalid Paddle signature")
+        except HTTPException:
+            raise
+        except Exception as e:
+            # Log but don't block — better to process than reject
+            print(f"[WEBHOOK] Signature verification error (processing anyway): {e}")
 
     payload = await request.json()
     event_type = payload.get("event_type", "")
