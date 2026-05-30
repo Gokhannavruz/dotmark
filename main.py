@@ -465,18 +465,34 @@ async def paddle_webhook(request: Request):
         "canceled": "free",
     }
 
-    if event_type in ("subscription.created", "subscription.activated", "subscription.updated", "subscription.trialing"):
-        # Find user by customer_id
-        user = await get_user_by_paddle_customer(customer_id)
+    if event_type in ("subscription.created", "subscription.activated", "subscription.updated", "subscription.trialing") or (event_type == "transaction.completed" and sub_id):
+        # ── Robust, Unified User Resolution ─────────────────────────────────────
+        user = None
+        
+        # 1. Resolve by paddle_customer_id
+        if customer_id:
+            user = await get_user_by_paddle_customer(customer_id)
+            
+        # 2. Resolve by paddle_subscription_id
+        if not user and sub_id:
+            user = await get_user_by_paddle_subscription(sub_id)
+            
+        # 3. Resolve by custom_data user_id passed at checkout
         if not user:
-            # Try to find by custom_data user_id passed at checkout
             custom_data = data.get("custom_data") or {}
             user_id = custom_data.get("user_id")
-            if user_id:
-                user = await get_user_by_id(int(user_id))
+            try:
+                user_id_int = int(user_id) if user_id else None
+                if user_id_int:
+                    user = await get_user_by_id(user_id_int)
+            except (ValueError, TypeError):
+                user = None
 
         if user:
             mapped_status = STATUS_MAP.get(status, "active")
+            if event_type == "transaction.completed":
+                mapped_status = "active"  # Completed payment confirms active state
+                
             # Determine plan from items
             items = data.get("items", [])
             plan = None
@@ -486,8 +502,10 @@ async def paddle_webhook(request: Request):
                     plan = "annual"
                 elif price_id == PADDLE_PRICE_MONTHLY:
                     plan = "monthly"
+                    
             await update_subscription(
-                user["id"], customer_id, sub_id or "",
+                user["id"], customer_id or user.get("paddle_customer_id") or "",
+                sub_id or user.get("paddle_subscription_id") or "",
                 mapped_status, plan, next_billed_at,
             )
 
@@ -503,12 +521,6 @@ async def paddle_webhook(request: Request):
     elif event_type == "subscription.resumed":
         if sub_id:
             await update_subscription_by_sub_id(sub_id, "active", next_billed_at)
-
-    elif event_type == "transaction.completed":
-        # Ensure subscription is marked active after successful payment
-        sub_id_from_tx = data.get("subscription_id")
-        if sub_id_from_tx:
-            await update_subscription_by_sub_id(sub_id_from_tx, "active", next_billed_at)
 
     return {"status": "ok"}
 
