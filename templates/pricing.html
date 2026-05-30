@@ -17,9 +17,7 @@
     },
     eventCallback: function(data) {
       if (data.name === "checkout.completed") {
-        // Extract checkout details from Paddle
         const d = data.data || {};
-        // Immediately tell our server to activate Pro BEFORE redirect
         fetch('/checkout/complete', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
@@ -31,7 +29,6 @@
         }).then(() => {
           window.location.href = "/dashboard?welcome=1";
         }).catch(() => {
-          // Even if the call fails, redirect — polling will handle it
           window.location.href = "/dashboard?welcome=1";
         });
       }
@@ -53,6 +50,59 @@
   }
 </script>
 
+<style>
+  .pricing-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(ellipse, rgba(14,165,233,0.08) 0%, rgba(139,92,246,0.04) 40%, transparent 70%);
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .pro-card-glow {
+    position: absolute;
+    inset: -1px;
+    border-radius: 1.5rem;
+    background: linear-gradient(135deg, rgba(14,165,233,0.4), rgba(139,92,246,0.3), rgba(14,165,233,0.2));
+    z-index: -1;
+    filter: blur(1px);
+    animation: proGlow 4s ease-in-out infinite alternate;
+  }
+  @keyframes proGlow {
+    0% { opacity: 0.5; }
+    100% { opacity: 0.9; }
+  }
+  .feature-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .comparison-arrow {
+    animation: arrowBounce 2s ease-in-out infinite;
+  }
+  @keyframes arrowBounce {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(6px); }
+  }
+  .stat-counter {
+    background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .sticky-cta {
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .sticky-cta.visible {
+    transform: translateY(0);
+  }
+  .value-badge {
+    background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05));
+    border: 1px solid rgba(16,185,129,0.25);
+  }
+</style>
+
 <!-- Nav -->
 <nav class="fixed top-0 inset-x-0 z-50 h-14 flex items-center border-b border-white/[0.04] backdrop-blur-2xl bg-gray-950/75">
   <div class="max-w-5xl mx-auto px-6 w-full flex items-center justify-between">
@@ -71,176 +121,389 @@
   </div>
 </nav>
 
-<!-- Hero -->
-<main class="pt-28 pb-24 max-w-5xl mx-auto px-6">
+<main class="pt-24 pb-24 relative overflow-hidden">
+  <div class="pricing-glow"></div>
 
-  <div class="text-center mb-16">
-    <p class="text-sky-500/80 text-xs font-medium uppercase tracking-[0.2em] mb-4">Pricing</p>
-    <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
-      Simple, honest pricing
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- HERO: Value proposition                                              -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="max-w-4xl mx-auto px-6 text-center mb-20 reveal">
+    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-medium mb-6">
+      <span class="w-1.5 h-1.5 bg-sky-400 rounded-full animate-pulse"></span>
+      Upgrade to Pro
+    </div>
+
+    <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-5 leading-[1.1]">
+      <span class="gradient-text">Stop saving.</span><br>
+      <span class="accent-text">Start acting.</span>
     </h1>
-    <p class="text-gray-500 text-sm font-light max-w-md mx-auto">
-      Start free. Upgrade when you're ready to unlock everything.
+
+    <p class="text-gray-400 text-base sm:text-lg font-light max-w-xl mx-auto mb-8 leading-relaxed">
+      You've saved hundreds of bookmarks. How many have you actually used?
+      Dotmark Pro turns every save into a <strong class="text-white font-medium">clear action plan</strong>.
     </p>
-  </div>
 
-  <!-- Billing toggle -->
-  <div class="flex items-center justify-center gap-3 mb-12">
-    <span id="label-monthly" class="text-sm text-white font-medium">Monthly</span>
-    <button id="billingToggle" onclick="toggleBilling()"
-      class="relative w-11 h-6 rounded-full bg-gray-700 transition-colors duration-200 focus:outline-none">
-      <span id="toggleDot" class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform duration-200"></span>
-    </button>
-    <span id="label-annual" class="text-sm text-gray-500">
-      Annual <span class="text-sky-400 text-xs font-semibold ml-1">Save 22%</span>
-    </span>
-  </div>
-
-  <!-- Plans grid -->
-  <div class="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-
-    <!-- Free -->
-    <div class="card-border rounded-2xl p-8 flex flex-col">
-      <div class="mb-6">
-        <p class="text-xs text-gray-500 font-medium uppercase tracking-widest mb-2">Free</p>
-        <div class="flex items-end gap-1 mb-3">
-          <span class="text-4xl font-extrabold">$0</span>
-          <span class="text-gray-500 text-sm mb-1">/month</span>
-        </div>
-        <p class="text-gray-500 text-sm font-light">Get started, no credit card needed.</p>
+    <!-- Pain → Solution mini comparison -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 max-w-lg mx-auto">
+      <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/[0.06] border border-red-500/15 text-sm">
+        <span class="text-red-400 text-lg">😩</span>
+        <span class="text-gray-400">Bookmarks piling up, <span class="text-red-400 font-medium">never read</span></span>
       </div>
-
-      <ul class="space-y-3 mb-8 flex-1">
-        {% for item in [
-          ("Sync up to 25 bookmarks", true),
-          ("AI categorization", true),
-          ("Basic summaries", true),
-          ("Deep analysis & roadmaps", false),
-          ("MVP prompt builder", false),
-          ("Export to Markdown", false),
-          ("Priority sync", false),
-        ] %}
-        <li class="flex items-center gap-2.5 text-sm">
-          {% if item[1] %}
-          <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-          <span class="text-gray-300">{{ item[0] }}</span>
-          {% else %}
-          <svg class="w-4 h-4 text-gray-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-          <span class="text-gray-600">{{ item[0] }}</span>
-          {% endif %}
-        </li>
-        {% endfor %}
-      </ul>
-
-      {% if subscription_status in ("active", "trialing") %}
-      <span class="text-center text-xs text-gray-600 py-3">Current plan</span>
-      {% elif logged_in %}
-      <a href="/dashboard" class="text-center text-sm font-medium text-gray-400 border border-white/10 hover:border-white/20 rounded-xl py-3 transition">
-        Go to Dashboard
-      </a>
-      {% else %}
-      <a href="/auth/login" class="text-center text-sm font-medium text-gray-400 border border-white/10 hover:border-white/20 rounded-xl py-3 transition">
-        Get started free
-      </a>
-      {% endif %}
+      <span class="comparison-arrow text-gray-600 text-xl hidden sm:block">→</span>
+      <span class="comparison-arrow text-gray-600 text-xl block sm:hidden rotate-90">→</span>
+      <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/15 text-sm">
+        <span class="text-emerald-400 text-lg">🚀</span>
+        <span class="text-gray-400">Every bookmark, <span class="text-emerald-400 font-medium">actionable</span></span>
+      </div>
     </div>
+  </section>
 
-    <!-- Pro -->
-    <div class="relative rounded-2xl p-8 flex flex-col"
-         style="background: linear-gradient(135deg, rgba(14,165,233,0.08) 0%, rgba(14,165,233,0.03) 100%); border: 1px solid rgba(14,165,233,0.25);">
-
-      <!-- Badge -->
-      <div class="absolute -top-3 left-1/2 -translate-x-1/2">
-        <span class="text-xs font-semibold px-3 py-1 rounded-full bg-sky-500 text-white">Most popular</span>
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- STATS BAR                                                            -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="max-w-3xl mx-auto px-6 mb-20 reveal" data-delay="100">
+    <div class="grid grid-cols-3 gap-3 sm:gap-4">
+      <div class="stat-counter rounded-2xl p-4 sm:p-5 text-center">
+        <p class="text-2xl sm:text-3xl font-extrabold text-white mb-1">10x</p>
+        <p class="text-[10px] sm:text-xs text-gray-500 font-light">Faster to find<br>what matters</p>
       </div>
+      <div class="stat-counter rounded-2xl p-4 sm:p-5 text-center">
+        <p class="text-2xl sm:text-3xl font-extrabold text-white mb-1">∞</p>
+        <p class="text-[10px] sm:text-xs text-gray-500 font-light">Unlimited<br>bookmarks</p>
+      </div>
+      <div class="stat-counter rounded-2xl p-4 sm:p-5 text-center">
+        <p class="text-2xl sm:text-3xl font-extrabold text-white mb-1">AI</p>
+        <p class="text-[10px] sm:text-xs text-gray-500 font-light">Powered deep<br>analysis</p>
+      </div>
+    </div>
+  </section>
 
-      <div class="mb-6">
-        <p class="text-xs text-sky-400 font-medium uppercase tracking-widest mb-2">Pro</p>
-        <div class="flex items-end gap-1 mb-1">
-          <span id="price-display" class="text-4xl font-extrabold">$9</span>
-          <span id="period-display" class="text-gray-500 text-sm mb-1">/month</span>
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- WHAT YOU GET: Feature deep dive                                      -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="max-w-3xl mx-auto px-6 mb-20 reveal" data-delay="150">
+    <h2 class="text-2xl sm:text-3xl font-bold text-center mb-3 tracking-tight">Everything Pro unlocks</h2>
+    <p class="text-gray-500 text-sm text-center mb-10 font-light max-w-md mx-auto">Each feature is designed to move you from "I'll read this later" to "I've done this."</p>
+
+    <div class="grid gap-4 sm:gap-5">
+      <!-- Feature 1 -->
+      <div class="flex gap-4 p-5 rounded-2xl border border-white/[0.06] bg-white/[0.015] hover:border-sky-500/20 transition group">
+        <div class="feature-icon bg-sky-500/10 text-sky-400 border border-sky-500/15">🔄</div>
+        <div>
+          <h3 class="text-sm font-semibold text-white mb-1 group-hover:text-sky-400 transition">Unlimited Bookmark Syncs</h3>
+          <p class="text-xs text-gray-500 font-light leading-relaxed">Free plan caps at 25. Pro removes the limit — sync your entire X bookmark library and keep it updated automatically.</p>
         </div>
-        <p id="billed-note" class="text-gray-600 text-xs mb-3 h-4"></p>
-        <p class="text-gray-400 text-sm font-light">Everything you need to act on your bookmarks.</p>
       </div>
+      <!-- Feature 2 -->
+      <div class="flex gap-4 p-5 rounded-2xl border border-white/[0.06] bg-white/[0.015] hover:border-violet-500/20 transition group">
+        <div class="feature-icon bg-violet-500/10 text-violet-400 border border-violet-500/15">🧠</div>
+        <div>
+          <h3 class="text-sm font-semibold text-white mb-1 group-hover:text-violet-400 transition">Deep AI Analysis & Roadmaps</h3>
+          <p class="text-xs text-gray-500 font-light leading-relaxed">Each bookmark gets a detailed breakdown: why it matters, prerequisites, step-by-step action plan, and a personalized learning roadmap with milestones.</p>
+        </div>
+      </div>
+      <!-- Feature 3 -->
+      <div class="flex gap-4 p-5 rounded-2xl border border-white/[0.06] bg-white/[0.015] hover:border-amber-500/20 transition group">
+        <div class="feature-icon bg-amber-500/10 text-amber-400 border border-amber-500/15">🚀</div>
+        <div>
+          <h3 class="text-sm font-semibold text-white mb-1 group-hover:text-amber-400 transition">MVP Prompt Builder</h3>
+          <p class="text-xs text-gray-500 font-light leading-relaxed">Turn any technical bookmark into a production-ready development prompt. Answer a few questions, get a complete boilerplate-ready spec you can paste into any AI coding tool.</p>
+        </div>
+      </div>
+      <!-- Feature 4 -->
+      <div class="flex gap-4 p-5 rounded-2xl border border-white/[0.06] bg-white/[0.015] hover:border-emerald-500/20 transition group">
+        <div class="feature-icon bg-emerald-500/10 text-emerald-400 border border-emerald-500/15">📤</div>
+        <div>
+          <h3 class="text-sm font-semibold text-white mb-1 group-hover:text-emerald-400 transition">Export to Markdown</h3>
+          <p class="text-xs text-gray-500 font-light leading-relaxed">Download any analysis as a clean Markdown file. Perfect for Notion, Obsidian, or sharing with your team.</p>
+        </div>
+      </div>
+      <!-- Feature 5 -->
+      <div class="flex gap-4 p-5 rounded-2xl border border-white/[0.06] bg-white/[0.015] hover:border-pink-500/20 transition group">
+        <div class="feature-icon bg-pink-500/10 text-pink-400 border border-pink-500/15">⚡</div>
+        <div>
+          <h3 class="text-sm font-semibold text-white mb-1 group-hover:text-pink-400 transition">Priority Sync & Support</h3>
+          <p class="text-xs text-gray-500 font-light leading-relaxed">Your syncs are processed first. Plus, get direct email support for any issue or feature request.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-      <ul class="space-y-3 mb-8 flex-1">
-        {% for item in [
-          "Unlimited bookmark syncs",
-          "AI categorization",
-          "Deep analysis & roadmaps",
-          "MVP prompt builder",
-          "Export to Markdown",
-          "Priority sync",
-          "Email support",
-        ] %}
-        <li class="flex items-center gap-2.5 text-sm">
-          <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-          <span class="text-gray-300">{{ item }}</span>
-        </li>
-        {% endfor %}
-      </ul>
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- PRICING CARDS                                                        -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="max-w-3xl mx-auto px-6 mb-20 reveal" data-delay="200" id="pricing-cards">
+    <h2 class="text-2xl sm:text-3xl font-bold text-center mb-3 tracking-tight">Choose your plan</h2>
+    <p class="text-gray-500 text-sm text-center mb-8 font-light">No hidden fees. Cancel anytime. 14-day money-back guarantee.</p>
 
-      {% if subscription_status in ("active", "trialing") %}
-      <a href="/account/portal"
-         class="text-center text-sm font-semibold bg-sky-500 hover:bg-sky-400 text-white rounded-xl py-3.5 transition">
-        Manage subscription →
-      </a>
-      {% elif subscription_status == "past_due" %}
-      <a href="/account/portal"
-         class="text-center text-sm font-semibold bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl py-3.5 transition">
-        Update payment method
-      </a>
-      {% else %}
-      <button id="checkoutBtn" onclick="openCheckout('{{ paddle_price_monthly }}')"
-        class="text-sm font-semibold bg-sky-500 hover:bg-sky-400 text-white rounded-xl py-3.5 transition">
-        {% if logged_in %}Get Pro{% else %}Sign in to upgrade{% endif %}
+    <!-- Billing toggle -->
+    <div class="flex items-center justify-center gap-3 mb-10">
+      <span id="label-monthly" class="text-sm text-white font-medium cursor-pointer" onclick="if(isAnnual) toggleBilling()">Monthly</span>
+      <button id="billingToggle" onclick="toggleBilling()"
+        class="relative w-12 h-7 rounded-full bg-gray-700 transition-colors duration-300 focus:outline-none">
+        <span id="toggleDot" class="absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform duration-300 shadow-md"></span>
       </button>
-      {% endif %}
+      <span id="label-annual" class="text-sm text-gray-500 cursor-pointer" onclick="if(!isAnnual) toggleBilling()">
+        Annual <span class="value-badge text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full ml-1">SAVE 22%</span>
+      </span>
     </div>
 
-  </div>
+    <div class="grid md:grid-cols-2 gap-5 sm:gap-6">
 
-  <!-- FAQ -->
-  <div class="mt-20 max-w-2xl mx-auto">
+      <!-- FREE -->
+      <div class="card-border rounded-2xl p-7 sm:p-8 flex flex-col">
+        <div class="mb-6">
+          <p class="text-xs text-gray-500 font-medium uppercase tracking-widest mb-2">Free</p>
+          <div class="flex items-end gap-1 mb-3">
+            <span class="text-4xl font-extrabold">$0</span>
+            <span class="text-gray-500 text-sm mb-1">/month</span>
+          </div>
+          <p class="text-gray-500 text-sm font-light">Get started — no credit card needed.</p>
+        </div>
+
+        <ul class="space-y-3 mb-8 flex-1">
+          {% for item in [
+            ("Sync up to 25 bookmarks", true),
+            ("AI categorization", true),
+            ("Basic summaries", true),
+            ("Deep analysis & roadmaps", false),
+            ("MVP prompt builder", false),
+            ("Export to Markdown", false),
+            ("Priority sync", false),
+          ] %}
+          <li class="flex items-center gap-2.5 text-sm">
+            {% if item[1] %}
+            <svg class="w-4 h-4 text-emerald-400/70 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span class="text-gray-300">{{ item[0] }}</span>
+            {% else %}
+            <svg class="w-4 h-4 text-gray-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6"/></svg>
+            <span class="text-gray-600">{{ item[0] }}</span>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+
+        {% if subscription_status in ("active", "trialing") %}
+        <span class="text-center text-xs text-gray-600 py-3">Current plan</span>
+        {% elif logged_in %}
+        <a href="/dashboard" class="text-center text-sm font-medium text-gray-400 border border-white/10 hover:border-white/20 rounded-xl py-3 transition">
+          Go to Dashboard
+        </a>
+        {% else %}
+        <a href="/auth/login" class="text-center text-sm font-medium text-gray-400 border border-white/10 hover:border-white/20 rounded-xl py-3 transition">
+          Get started free
+        </a>
+        {% endif %}
+      </div>
+
+      <!-- PRO -->
+      <div class="relative rounded-3xl p-7 sm:p-8 flex flex-col bg-gray-900/80" id="pro-card">
+        <div class="pro-card-glow"></div>
+
+        <!-- Badge -->
+        <div class="absolute -top-3.5 left-1/2 -translate-x-1/2">
+          <span class="text-xs font-bold px-4 py-1.5 rounded-full text-white shadow-lg shadow-sky-500/25"
+                style="background: linear-gradient(135deg, #0ea5e9, #8b5cf6);">
+            ✦ RECOMMENDED
+          </span>
+        </div>
+
+        <div class="mb-6">
+          <p class="text-xs font-medium uppercase tracking-widest mb-2" style="background: linear-gradient(90deg, #38bdf8, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Pro</p>
+          <div class="flex items-end gap-1.5 mb-1">
+            <span id="price-display" class="text-5xl font-extrabold">$9</span>
+            <span id="period-display" class="text-gray-400 text-sm mb-1.5">/month</span>
+          </div>
+          <p id="billed-note" class="text-gray-500 text-xs mb-3 h-4"></p>
+          <p class="text-gray-300 text-sm font-light">Turn every bookmark into an action plan.</p>
+        </div>
+
+        <ul class="space-y-3 mb-8 flex-1">
+          {% for item in [
+            ("Unlimited bookmark syncs", "🔄"),
+            ("AI auto-categorization", "🏷"),
+            ("Deep analysis & roadmaps", "🧠"),
+            ("MVP prompt builder", "🚀"),
+            ("Export to Markdown", "📤"),
+            ("Priority sync", "⚡"),
+            ("Email support", "💬"),
+          ] %}
+          <li class="flex items-center gap-2.5 text-sm">
+            <span class="text-sm w-5 text-center shrink-0">{{ item[1] }}</span>
+            <span class="text-gray-200">{{ item[0] }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+
+        {% if subscription_status in ("active", "trialing") %}
+        <a href="/account/portal"
+           class="text-center text-sm font-semibold text-white rounded-xl py-4 transition shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30"
+           style="background: linear-gradient(135deg, #0ea5e9, #8b5cf6);">
+          Manage subscription →
+        </a>
+        {% elif subscription_status == "past_due" %}
+        <a href="/account/portal"
+           class="text-center text-sm font-semibold bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl py-4 transition">
+          Update payment method
+        </a>
+        {% else %}
+        <button id="checkoutBtn" onclick="openCheckout('{{ paddle_price_monthly }}')"
+          class="text-sm font-semibold text-white rounded-xl py-4 transition shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+          style="background: linear-gradient(135deg, #0ea5e9, #8b5cf6);">
+          {% if logged_in %}Get Pro — Start now{% else %}Sign in to upgrade{% endif %}
+        </button>
+        <p class="text-center text-[10px] text-gray-500 mt-3 font-light">14-day money-back guarantee · Cancel anytime</p>
+        {% endif %}
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- COMPARISON TABLE                                                     -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="max-w-2xl mx-auto px-6 mb-20 reveal" data-delay="250">
+    <h2 class="text-xl font-bold text-center mb-8 tracking-tight">Free vs Pro — at a glance</h2>
+    <div class="rounded-2xl border border-white/[0.06] overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-white/[0.06]">
+            <th class="text-left py-4 px-5 text-gray-500 font-medium text-xs uppercase tracking-wider">Feature</th>
+            <th class="py-4 px-4 text-gray-500 font-medium text-xs uppercase tracking-wider text-center">Free</th>
+            <th class="py-4 px-4 font-medium text-xs uppercase tracking-wider text-center" style="background: linear-gradient(90deg, #38bdf8, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Pro</th>
+          </tr>
+        </thead>
+        <tbody class="text-xs sm:text-sm">
+          {% set rows = [
+            ("Bookmark syncs", "25", "Unlimited"),
+            ("AI categorization", "✓", "✓"),
+            ("Summaries", "Basic", "Advanced"),
+            ("Deep analysis", "—", "✓"),
+            ("Learning roadmaps", "—", "✓"),
+            ("MVP prompt builder", "—", "✓"),
+            ("Export to Markdown", "—", "✓"),
+            ("Sync priority", "Standard", "Priority"),
+            ("Support", "—", "Email"),
+          ] %}
+          {% for feature, free_val, pro_val in rows %}
+          <tr class="border-b border-white/[0.03] last:border-0 hover:bg-white/[0.01] transition">
+            <td class="py-3 px-5 text-gray-300 font-light">{{ feature }}</td>
+            <td class="py-3 px-4 text-center text-gray-500">
+              {% if free_val == "✓" %}<span class="text-emerald-400/60">✓</span>
+              {% elif free_val == "—" %}<span class="text-gray-700">—</span>
+              {% else %}{{ free_val }}{% endif %}
+            </td>
+            <td class="py-3 px-4 text-center text-white font-medium">
+              {% if pro_val == "✓" %}<span class="text-emerald-400">✓</span>
+              {% else %}{{ pro_val }}{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- SOCIAL PROOF / VALUE PROP                                            -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="max-w-2xl mx-auto px-6 mb-20 reveal" data-delay="300">
+    <div class="rounded-2xl border border-white/[0.06] bg-white/[0.01] p-7 sm:p-8 text-center">
+      <p class="text-3xl mb-4">💡</p>
+      <h3 class="text-lg font-bold mb-3">Think about it this way</h3>
+      <p class="text-gray-400 text-sm font-light leading-relaxed max-w-md mx-auto mb-5">
+        The average person saves <strong class="text-white font-medium">200+ bookmarks a year</strong> and reads fewer than 10% of them.
+        That's hours of curation — wasted. Dotmark Pro makes sure <strong class="text-white font-medium">every single save counts</strong>.
+      </p>
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full value-badge">
+        <span class="text-emerald-400 text-xs font-semibold">Less than $0.30/day to unlock everything</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- FAQ                                                                  -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="max-w-2xl mx-auto px-6 mb-20 reveal" data-delay="350">
     <h2 class="text-xl font-bold text-center mb-8">Frequently asked questions</h2>
-    <div class="space-y-4">
+    <div class="space-y-3">
       {% set faqs = [
-        ("Can I cancel anytime?", "Yes. Cancel from the customer portal at any time. You keep Pro access until the end of your billing period."),
-        ("Is there a free trial?", "Pro includes a 14-day money-back guarantee. If you're not satisfied, contact support within 14 days for a full refund."),
-        ("What payment methods are accepted?", "All major credit and debit cards via Paddle, our payment provider. Paddle handles all billing securely."),
-        ("What happens to my data if I downgrade?", "Your bookmarks and analyses are kept. You'll only lose the ability to sync new ones beyond the 25-bookmark free limit."),
-        ("Is my payment secure?", "Yes. Payments are processed by Paddle, a registered Merchant of Record. Dotmark never stores your card details."),
+        ("Can I cancel anytime?", "Yes, absolutely. Cancel from the customer portal in one click. You keep Pro access until the end of your billing period — no questions asked."),
+        ("Do you offer a free trial?", "We offer something better: a 14-day money-back guarantee. Try Pro risk-free. If it's not for you, email us within 14 days for a full refund."),
+        ("What payment methods are accepted?", "All major credit and debit cards worldwide. Payments are handled by Paddle, a trusted Merchant of Record. We never see or store your card details."),
+        ("What happens to my data if I downgrade?", "Nothing disappears. Your bookmarks, analyses, and notes stay safe. You'll only lose access to Pro features like deep analysis and unlimited syncing."),
+        ("Is my data private?", "Yes. We only access your public X bookmarks through the official API. Your data is encrypted and never shared with third parties. See our Privacy Policy for details."),
+        ("How fast do new bookmarks sync?", "Pro users get priority processing. Most syncs complete in under 10 seconds, even for 100+ bookmarks."),
       ] %}
       {% for q, a in faqs %}
       <details class="group border border-white/[0.06] rounded-xl bg-white/[0.01] overflow-hidden">
-        <summary class="px-5 py-4 text-sm font-medium cursor-pointer flex justify-between items-center list-none">
+        <summary class="px-5 py-4 text-sm font-medium cursor-pointer flex justify-between items-center list-none hover:text-sky-400 transition">
           {{ q }}
-          <svg class="w-4 h-4 text-gray-500 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          <svg class="w-4 h-4 text-gray-500 group-open:rotate-180 transition-transform shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </summary>
-        <p class="px-5 pb-4 text-sm text-gray-500 font-light leading-relaxed">{{ a }}</p>
+        <p class="px-5 pb-4 text-sm text-gray-400 font-light leading-relaxed">{{ a }}</p>
       </details>
       {% endfor %}
     </div>
-  </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- FINAL CTA                                                            -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  {% if subscription_status not in ("active", "trialing") %}
+  <section class="max-w-2xl mx-auto px-6 mb-10 reveal" data-delay="400">
+    <div class="rounded-3xl p-8 sm:p-10 text-center relative overflow-hidden"
+         style="background: linear-gradient(135deg, rgba(14,165,233,0.08) 0%, rgba(139,92,246,0.06) 50%, rgba(14,165,233,0.04) 100%); border: 1px solid rgba(14,165,233,0.2);">
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-sky-500/10 rounded-full blur-[60px] pointer-events-none"></div>
+      <div class="relative z-10">
+        <h2 class="text-2xl sm:text-3xl font-bold mb-3 tracking-tight">Ready to unlock your bookmarks?</h2>
+        <p class="text-gray-400 text-sm font-light mb-6 max-w-md mx-auto">Join Dotmark Pro and turn your saved content into real results. Try risk-free with our 14-day money-back guarantee.</p>
+        <button onclick="openCheckout(isAnnual ? annualPriceId : monthlyPriceId)"
+          class="inline-flex items-center gap-2 text-sm font-semibold text-white px-8 py-4 rounded-2xl transition shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+          style="background: linear-gradient(135deg, #0ea5e9, #8b5cf6);">
+          {% if logged_in %}
+          <span>✦</span> Get Pro Now
+          {% else %}
+          <span>✦</span> Sign In & Upgrade
+          {% endif %}
+        </button>
+      </div>
+    </div>
+  </section>
+  {% endif %}
 
   <!-- Trust badges -->
-  <div class="mt-14 flex flex-wrap items-center justify-center gap-6 text-xs text-gray-600">
+  <div class="max-w-3xl mx-auto px-6 flex flex-wrap items-center justify-center gap-5 sm:gap-8 text-xs text-gray-500 reveal" data-delay="450">
     <span class="flex items-center gap-1.5">
-      <svg class="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+      <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
       Secure checkout by Paddle
     </span>
     <span class="flex items-center gap-1.5">
-      <svg class="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       14-day money-back guarantee
     </span>
     <span class="flex items-center gap-1.5">
-      <svg class="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Instant activation
+    </span>
+    <span class="flex items-center gap-1.5">
+      <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       Cancel anytime
     </span>
   </div>
 
 </main>
+
+<!-- Sticky Mobile CTA -->
+{% if subscription_status not in ("active", "trialing") %}
+<div id="stickyCta" class="sticky-cta fixed bottom-0 inset-x-0 z-50 p-3 bg-gray-950/90 backdrop-blur-xl border-t border-white/[0.06] md:hidden">
+  <button onclick="openCheckout(isAnnual ? annualPriceId : monthlyPriceId)"
+    class="w-full text-sm font-semibold text-white rounded-xl py-3.5 transition shadow-lg cursor-pointer"
+    style="background: linear-gradient(135deg, #0ea5e9, #8b5cf6);">
+    {% if logged_in %}✦ Get Pro Now{% else %}✦ Sign In & Upgrade{% endif %}
+  </button>
+</div>
+{% endif %}
 
 <!-- Footer -->
 <footer class="border-t border-white/[0.04]">
@@ -259,7 +522,7 @@
 </footer>
 
 <script>
-  // Billing toggle logic
+  // ── Billing toggle logic ──────────────────────────────────────────────
   let isAnnual = false;
   const monthlyPriceId = '{{ paddle_price_monthly }}';
   const annualPriceId  = '{{ paddle_price_annual }}';
@@ -280,18 +543,18 @@
 
     if (isAnnual) {
       dot.style.transform = 'translateX(20px)';
-      toggle.classList.replace('bg-gray-700', 'bg-sky-500');
-      labelMonthly.classList.replace('text-white', 'text-gray-500');
-      labelAnnual.classList.replace('text-gray-500', 'text-white');
+      toggle.style.background = 'linear-gradient(135deg, #0ea5e9, #8b5cf6)';
+      labelMonthly.className = 'text-sm text-gray-500 font-medium cursor-pointer';
+      labelAnnual.className = 'text-sm text-white font-medium cursor-pointer';
       priceDisplay.textContent = annualPriceString;
       periodDisplay.textContent = '/month';
       billedNote.textContent = annualBilledNoteString;
       if (checkoutBtn) checkoutBtn.onclick = () => openCheckout(annualPriceId);
     } else {
       dot.style.transform = 'translateX(0)';
-      toggle.classList.replace('bg-sky-500', 'bg-gray-700');
-      labelMonthly.classList.replace('text-gray-500', 'text-white');
-      labelAnnual.classList.replace('text-white', 'text-gray-500');
+      toggle.style.background = '#374151';
+      labelMonthly.className = 'text-sm text-white font-medium cursor-pointer';
+      labelAnnual.className = 'text-sm text-gray-500 font-medium cursor-pointer';
       priceDisplay.textContent = monthlyPriceString;
       periodDisplay.textContent = '/month';
       billedNote.textContent = '';
@@ -304,7 +567,23 @@
     updatePricingUI();
   }
 
-  // Fetch localized pricing dynamically from Paddle Catalog on load
+  // ── Sticky mobile CTA visibility ──────────────────────────────────────
+  const stickyCta = document.getElementById('stickyCta');
+  if (stickyCta) {
+    const pricingCards = document.getElementById('pricing-cards');
+    const stickyObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          stickyCta.classList.remove('visible');
+        } else {
+          stickyCta.classList.add('visible');
+        }
+      });
+    }, { threshold: 0 });
+    if (pricingCards) stickyObserver.observe(pricingCards);
+  }
+
+  // ── Fetch localized pricing from Paddle ───────────────────────────────
   if (typeof Paddle !== 'undefined' && monthlyPriceId && annualPriceId) {
     Paddle.PricePreview({
       items: [
@@ -325,7 +604,6 @@
         } else if (item.price.id === annualPriceId) {
           annualTotal = item.formattedTotals.subtotal;
           
-          // Calculate localized monthly equivalent for the annual plan (e.g. $84/12 = $7)
           const rawAnnualSubtotal = item.totals.subtotal;
           const zeroDecimalCurrencies = ['JPY', 'KRW', 'CLP', 'VND'];
           const divisor = zeroDecimalCurrencies.includes(currencyCode) ? 1 : 100;
