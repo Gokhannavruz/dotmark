@@ -2,6 +2,22 @@ import os
 import aiosqlite
 import asyncpg
 import json
+from datetime import datetime
+
+def _parse_datetime(dt_val):
+    if not dt_val:
+        return None
+    if isinstance(dt_val, datetime):
+        return dt_val
+    try:
+        s = str(dt_val)
+        if s.endswith("Z"):
+            s = s[:-1] + "+00:00"
+        return datetime.fromisoformat(s)
+    except Exception as e:
+        print(f"[DB] Error parsing datetime '{dt_val}': {e}")
+        return None
+
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 IS_POSTGRES = DATABASE_URL and (DATABASE_URL.startswith("postgres://") or DATABASE_URL.startswith("postgresql://"))
@@ -444,8 +460,9 @@ async def update_subscription(
     paddle_subscription_id: str,
     status: str,
     plan: str = None,
-    ends_at: str = None,
+    ends_at = None,
 ):
+    parsed_ends_at = _parse_datetime(ends_at)
     async with db_connection() as db:
         await db.execute(
             """UPDATE users SET
@@ -455,7 +472,7 @@ async def update_subscription(
                 subscription_plan = ?,
                 subscription_ends_at = ?
                WHERE id = ?""",
-            (paddle_customer_id, paddle_subscription_id, status, plan, ends_at, user_id),
+            (paddle_customer_id, paddle_subscription_id, status, plan, parsed_ends_at, user_id),
         )
         await db.commit()
 
@@ -463,13 +480,14 @@ async def update_subscription(
 async def update_subscription_by_sub_id(
     paddle_subscription_id: str,
     status: str,
-    ends_at: str = None,
+    ends_at = None,
 ):
+    parsed_ends_at = _parse_datetime(ends_at)
     async with db_connection() as db:
         await db.execute(
             """UPDATE users SET subscription_status = ?, subscription_ends_at = ?
                WHERE paddle_subscription_id = ?""",
-            (status, ends_at, paddle_subscription_id),
+            (status, parsed_ends_at, paddle_subscription_id),
         )
         await db.commit()
 
