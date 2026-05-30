@@ -148,7 +148,7 @@ async def sync_subscription_with_paddle(user_id: int) -> dict:
             resp = await client.get(
                 f"{paddle_api_base}/subscriptions",
                 headers={"Authorization": f"Bearer {paddle_api_secret}"},
-                params={"status": "active,trialing", "per_page": 20},
+                params={"status": "active,trialing", "per_page": 200, "order_by": "id[DESC]"},
                 timeout=5.0
             )
             if resp.status_code == 200:
