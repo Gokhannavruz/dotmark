@@ -21,8 +21,20 @@
             {% endif %}
             <a href="/logout" class="text-gray-500 hover:text-white text-sm transition px-2 border-r border-gray-700">Logout</a>
             <button onclick="confirmDeleteAccount()" class="text-red-500/70 hover:text-red-500 text-sm transition px-2">Delete Account</button>
-        </div>
     </div>
+
+    {% if subscription_status in ("active", "trialing") %}
+    <div class="mb-8 bg-sky-500/10 border border-sky-500/20 rounded-xl p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <span class="text-xl">✨</span>
+            <div>
+                <p class="text-sm font-semibold text-white">Pro Subscriber Active</p>
+                <p class="text-xs text-sky-400/80 font-light">Thank you for supporting Dotmark! All premium AI analysis and sync features are unlocked.</p>
+            </div>
+        </div>
+        <a href="/account/portal" class="text-xs bg-sky-500 hover:bg-sky-400 text-white font-medium px-3 py-1.5 rounded-lg transition">Manage Subscription</a>
+    </div>
+    {% endif %}
 
     {% if not categories %}
     <div class="flex flex-col items-center justify-center py-32 text-center">
