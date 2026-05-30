@@ -21,6 +21,16 @@ def _translate_query(query: str, params: tuple) -> str:
             new_query.append(char)
     return "".join(new_query)
 
+class PostgresRow(dict):
+    def __init__(self, record):
+        super().__init__(record)
+        self._values = list(record.values())
+
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self._values[key]
+        return super().__getitem__(key)
+
 class PostgresCursor:
     def __init__(self, rows):
         self.rows = rows
@@ -45,7 +55,7 @@ class PostgresConnection:
         translated_query = _translate_query(query, params)
         if "SELECT" in query.upper():
             records = await self.conn.fetch(translated_query, *params)
-            rows = [dict(r) for r in records]
+            rows = [PostgresRow(r) for r in records]
             return PostgresCursor(rows)
         else:
             await self.conn.execute(translated_query, *params)
