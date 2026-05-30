@@ -513,85 +513,101 @@ async def paddle_webhook(request: Request):
             print(f"[WEBHOOK] Signature error: {e}")
             raise HTTPException(status_code=403, detail="Invalid Paddle signature")
 
+    try:
+        payload = await request.json()
+        event_type = payload.get("event_type", "")
+        data = payload.get("data") or {}
 
-
-    payload = await request.json()
-    event_type = payload.get("event_type", "")
-    data = payload.get("data", {})
-
-    # Extract common fields
-    sub_id = data.get("id") if event_type.startswith("subscription") else data.get("subscription_id")
-    customer_id = data.get("customer_id", "")
-    status = data.get("status", "")
-    next_billed_at = data.get("next_billed_at") or data.get("current_billing_period", {}).get("ends_at")
-
-    # Map Paddle status to our internal status
-    STATUS_MAP = {
-        "active": "active",
-        "trialing": "trialing",
-        "past_due": "past_due",
-        "paused": "paused",
-        "canceled": "free",
-    }
-
-    if event_type in ("subscription.created", "subscription.activated", "subscription.updated", "subscription.trialing") or (event_type == "transaction.completed" and sub_id):
-        # ── Robust, Unified User Resolution ─────────────────────────────────────
-        user = None
+        # Extract common fields safely
+        sub_id = data.get("id") if event_type.startswith("subscription") else data.get("subscription_id")
+        customer_id = data.get("customer_id") or ""
+        status = data.get("status") or ""
         
-        # 1. Resolve by paddle_customer_id
-        if customer_id:
-            user = await get_user_by_paddle_customer(customer_id)
-            
-        # 2. Resolve by paddle_subscription_id
-        if not user and sub_id:
-            user = await get_user_by_paddle_subscription(sub_id)
-            
-        # 3. Resolve by custom_data user_id passed at checkout
-        if not user:
-            custom_data = data.get("custom_data") or {}
-            user_id = custom_data.get("user_id")
-            try:
-                user_id_int = int(user_id) if user_id else None
-                if user_id_int:
-                    user = await get_user_by_id(user_id_int)
-            except (ValueError, TypeError):
-                user = None
+        current_billing = data.get("current_billing_period") or {}
+        next_billed_at = data.get("next_billed_at") or current_billing.get("ends_at")
 
-        if user:
-            mapped_status = STATUS_MAP.get(status, "active")
-            if event_type == "transaction.completed":
-                mapped_status = "active"  # Completed payment confirms active state
+        print(f"[WEBHOOK] Received event: {event_type} (sub_id={sub_id}, customer_id={customer_id})")
+
+        # Map Paddle status to our internal status
+        STATUS_MAP = {
+            "active": "active",
+            "trialing": "trialing",
+            "past_due": "past_due",
+            "paused": "paused",
+            "canceled": "free",
+        }
+
+        if event_type in ("subscription.created", "subscription.activated", "subscription.updated", "subscription.trialing") or (event_type == "transaction.completed" and sub_id):
+            # ── Robust, Unified User Resolution ─────────────────────────────────────
+            user = None
+            
+            # 1. Resolve by paddle_customer_id
+            if customer_id:
+                user = await get_user_by_paddle_customer(customer_id)
                 
-            # Determine plan from items
-            items = data.get("items", [])
-            plan = None
-            if items:
-                price_id = items[0].get("price", {}).get("id", "")
-                if price_id == PADDLE_PRICE_ANNUAL:
-                    plan = "annual"
-                elif price_id == PADDLE_PRICE_MONTHLY:
-                    plan = "monthly"
+            # 2. Resolve by paddle_subscription_id
+            if not user and sub_id:
+                user = await get_user_by_paddle_subscription(sub_id)
+                
+            # 3. Resolve by custom_data user_id passed at checkout
+            if not user:
+                custom_data = data.get("custom_data") or {}
+                user_id = custom_data.get("user_id")
+                try:
+                    user_id_int = int(user_id) if user_id else None
+                    if user_id_int:
+                        user = await get_user_by_id(user_id_int)
+                except (ValueError, TypeError):
+                    user = None
+
+            if user:
+                mapped_status = STATUS_MAP.get(status, "active")
+                if event_type == "transaction.completed":
+                    mapped_status = "active"  # Completed payment confirms active state
                     
-            await update_subscription(
-                user["id"], customer_id or user.get("paddle_customer_id") or "",
-                sub_id or user.get("paddle_subscription_id") or "",
-                mapped_status, plan, next_billed_at,
-            )
+                # Determine plan from items
+                items = data.get("items") or []
+                plan = None
+                if items and isinstance(items, list):
+                    first_item = items[0] or {}
+                    price_obj = first_item.get("price") or {}
+                    price_id = price_obj.get("id", "")
+                    if price_id == PADDLE_PRICE_ANNUAL:
+                        plan = "annual"
+                    elif price_id == PADDLE_PRICE_MONTHLY:
+                        plan = "monthly"
+                        
+                await update_subscription(
+                    user["id"], customer_id or user.get("paddle_customer_id") or "",
+                    sub_id or user.get("paddle_subscription_id") or "",
+                    mapped_status, plan, next_billed_at,
+                )
+            else:
+                print(f"[WEBHOOK] User resolution failed for event={event_type}, sub_id={sub_id}, custom_data.user_id={data.get('custom_data', {}).get('user_id') if data.get('custom_data') else 'None'}")
 
-    elif event_type in ("subscription.paused", "subscription.past_due"):
-        mapped = "paused" if event_type == "subscription.paused" else "past_due"
-        if sub_id:
-            await update_subscription_by_sub_id(sub_id, mapped, next_billed_at)
+        elif event_type in ("subscription.paused", "subscription.past_due"):
+            mapped = "paused" if event_type == "subscription.paused" else "past_due"
+            if sub_id:
+                await update_subscription_by_sub_id(sub_id, mapped, next_billed_at)
 
-    elif event_type == "subscription.canceled":
-        if sub_id:
-            await update_subscription_by_sub_id(sub_id, "free", None)
+        elif event_type == "subscription.canceled":
+            if sub_id:
+                await update_subscription_by_sub_id(sub_id, "free", None)
 
-    elif event_type == "subscription.resumed":
-        if sub_id:
-            await update_subscription_by_sub_id(sub_id, "active", next_billed_at)
+        elif event_type == "subscription.resumed":
+            if sub_id:
+                await update_subscription_by_sub_id(sub_id, "active", next_billed_at)
 
-    return {"status": "ok"}
+        return {"status": "ok"}
+
+    except Exception as e:
+        import traceback
+        print(f"[WEBHOOK ERROR] Exception during webhook processing: {e}")
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Webhook processing error: {type(e).__name__}: {str(e)}"
+        )
 
 
 @app.get("/account/portal")
