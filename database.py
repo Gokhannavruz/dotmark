@@ -8,12 +8,13 @@ def _parse_datetime(dt_val):
     if not dt_val:
         return None
     if isinstance(dt_val, datetime):
-        return dt_val
+        return dt_val.replace(tzinfo=None)
     try:
         s = str(dt_val)
         if s.endswith("Z"):
             s = s[:-1] + "+00:00"
-        return datetime.fromisoformat(s)
+        dt = datetime.fromisoformat(s)
+        return dt.replace(tzinfo=None)
     except Exception as e:
         print(f"[DB] Error parsing datetime '{dt_val}': {e}")
         return None
