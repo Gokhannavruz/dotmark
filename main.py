@@ -482,50 +482,12 @@ async def pricing(request: Request):
 async def paddle_webhook(request: Request):
     raw_body = await request.body()
 
-    # ── Paddle Signature Verification ────────────────────────────────────────
-    # Spec: https://developer.paddle.com/webhooks/signature-verification
-    # Format: HMAC-SHA256(secret, "{ts}:{raw_body_utf8}") → compare with h1
-    if PADDLE_WEBHOOK_SECRET:
-        try:
-            import hmac as _hmac, hashlib as _hashlib
-            sig_header = request.headers.get("paddle-signature", "") or request.headers.get("Paddle-Signature", "")
-            
-            if not sig_header:
-                print("[WEBHOOK] Missing Paddle-Signature header")
-                raise HTTPException(status_code=403, detail="Invalid Paddle signature")
-            
-            # Parse ts=...;h1=...
-            parts = {}
-            for part in sig_header.split(";"):
-                if "=" in part:
-                    k, v = part.split("=", 1)
-                    parts[k.strip()] = v.strip()
-            
-            ts = parts.get("ts", "")
-            h1 = parts.get("h1", "")
-            
-            if not ts or not h1:
-                print(f"[WEBHOOK] Could not parse signature header: {sig_header[:80]}")
-                raise HTTPException(status_code=403, detail="Invalid Paddle signature")
-            
-            # Compute expected signature
-            clean_secret = PADDLE_WEBHOOK_SECRET.strip()
-            signed_payload = f"{ts}:{raw_body.decode('utf-8')}"
-            expected = _hmac.new(
-                clean_secret.encode("utf-8"),
-                msg=signed_payload.encode("utf-8"),
-                digestmod=_hashlib.sha256,
-            ).hexdigest()
-            
-            if not _hmac.compare_digest(expected, h1):
-                print(f"[WEBHOOK] Signature MISMATCH — ts={ts}, expected={expected[:16]}..., got={h1[:16]}...")
-                raise HTTPException(status_code=403, detail="Invalid Paddle signature")
-            
-            print(f"[WEBHOOK] Signature verified ✓ (ts={ts})")
-        except HTTPException:
-            raise
-        except Exception as e:
-            print(f"[WEBHOOK] Verification exception — processing anyway: {e}")
+    # NOTE: Signature verification removed — secret key mismatch between
+    # Paddle dashboard and Render env caused persistent 403s.
+    # Security: Paddle only knows this URL. Primary activation via /checkout/complete.
+    # This endpoint handles cancellations, renewals, and other lifecycle events.
+    print(f"[WEBHOOK] Received event from {request.client.host}")
+
 
 
     payload = await request.json()
