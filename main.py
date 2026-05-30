@@ -482,29 +482,51 @@ async def pricing(request: Request):
 async def paddle_webhook(request: Request):
     raw_body = await request.body()
 
-    # Use official Paddle SDK verifier
+    # ── Paddle Signature Verification ────────────────────────────────────────
+    # Spec: https://developer.paddle.com/webhooks/signature-verification
+    # Format: HMAC-SHA256(secret, "{ts}:{raw_body_utf8}") → compare with h1
     if PADDLE_WEBHOOK_SECRET:
         try:
-            # Build a simple request-like object the SDK expects
-            # IMPORTANT: Use request.headers directly (Starlette Headers = case-insensitive)
-            # NOT dict(request.headers) which lowercases keys and breaks "Paddle-Signature" lookup
-            class _Req:
-                def __init__(self, headers, body):
-                    self.headers = headers
-                    self.body = body
+            import hmac as _hmac, hashlib as _hashlib
+            sig_header = request.headers.get("paddle-signature", "") or request.headers.get("Paddle-Signature", "")
             
-            sdk_request = _Req(request.headers, raw_body)
-            secret = Secret(PADDLE_WEBHOOK_SECRET.strip())
-            is_valid = _paddle_verifier.verify(sdk_request, secret, verify_time_drift=False)
-            if not is_valid:
-                print("[WEBHOOK] Paddle signature verification FAILED")
+            if not sig_header:
+                print("[WEBHOOK] Missing Paddle-Signature header")
                 raise HTTPException(status_code=403, detail="Invalid Paddle signature")
-            print("[WEBHOOK] Paddle signature verification PASSED ✓")
+            
+            # Parse ts=...;h1=...
+            parts = {}
+            for part in sig_header.split(";"):
+                if "=" in part:
+                    k, v = part.split("=", 1)
+                    parts[k.strip()] = v.strip()
+            
+            ts = parts.get("ts", "")
+            h1 = parts.get("h1", "")
+            
+            if not ts or not h1:
+                print(f"[WEBHOOK] Could not parse signature header: {sig_header[:80]}")
+                raise HTTPException(status_code=403, detail="Invalid Paddle signature")
+            
+            # Compute expected signature
+            clean_secret = PADDLE_WEBHOOK_SECRET.strip()
+            signed_payload = f"{ts}:{raw_body.decode('utf-8')}"
+            expected = _hmac.new(
+                clean_secret.encode("utf-8"),
+                msg=signed_payload.encode("utf-8"),
+                digestmod=_hashlib.sha256,
+            ).hexdigest()
+            
+            if not _hmac.compare_digest(expected, h1):
+                print(f"[WEBHOOK] Signature MISMATCH — ts={ts}, expected={expected[:16]}..., got={h1[:16]}...")
+                raise HTTPException(status_code=403, detail="Invalid Paddle signature")
+            
+            print(f"[WEBHOOK] Signature verified ✓ (ts={ts})")
         except HTTPException:
             raise
         except Exception as e:
-            # Log but don't block — better to process than reject
-            print(f"[WEBHOOK] Signature verification error (processing anyway): {e}")
+            print(f"[WEBHOOK] Verification exception — processing anyway: {e}")
+
 
     payload = await request.json()
     event_type = payload.get("event_type", "")
