@@ -47,7 +47,7 @@ def _verify_paddle_signature(sig_header: str, raw_body: bytes) -> bool:
         parts = dict(p.split("=", 1) for p in sig_header.split(";"))
         timestamp = parts.get("ts", "")
         paddle_sig = parts.get("h1", "")
-        payload = f"{timestamp}:{raw_body.decode('utf-8')}".encode()
+        payload = f"{timestamp}:".encode() + raw_body
         computed = hmac.new(
             PADDLE_WEBHOOK_SECRET.encode(),
             msg=payload,
