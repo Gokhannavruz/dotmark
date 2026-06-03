@@ -288,6 +288,193 @@
     </div>
 </section>
 
+<!-- FAQ Section -->
+<section id="faq" class="border-t border-white/[0.04]">
+    <div class="max-w-3xl mx-auto px-6 py-28">
+        <div class="text-center mb-16">
+            <p class="reveal text-sky-500/80 text-xs font-medium uppercase tracking-[0.2em] mb-4">Questions</p>
+            <h2 class="reveal text-4xl md:text-5xl font-extrabold tracking-tight" data-delay="80">
+                Frequently Asked<br><span class="accent-text">Questions</span>
+            </h2>
+        </div>
+
+        <div class="space-y-4">
+            <!-- FAQ Item 1 -->
+            <div class="reveal faq-item rounded-2xl border border-white/[0.06] bg-white/[0.01] transition-all duration-300" data-delay="0">
+                <button class="w-full flex items-center justify-between p-6 text-left focus:outline-none" onclick="toggleFaq(this)">
+                    <span class="font-bold text-white text-sm md:text-base">What is Dotmark and how does it work?</span>
+                    <span class="faq-icon ml-4 shrink-0 transition-transform duration-300 text-gray-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </span>
+                </button>
+                <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+                    <p class="px-6 pb-6 text-gray-400 text-xs md:text-sm leading-relaxed font-light">
+                        Dotmark is an AI-powered bookmark intelligence tool for X (Twitter). It securely syncs with your X account via OAuth2, analyzes your saved bookmarks using advanced AI, and automatically categorizes them by topic, priority, difficulty, and actionable next steps.
+                    </p>
+                </div>
+            </div>
+
+            <!-- FAQ Item 2 -->
+            <div class="reveal faq-item rounded-2xl border border-white/[0.06] bg-white/[0.01] transition-all duration-300" data-delay="60">
+                <button class="w-full flex items-center justify-between p-6 text-left focus:outline-none" onclick="toggleFaq(this)">
+                    <span class="font-bold text-white text-sm md:text-base">How does Dotmark organize X (Twitter) bookmarks?</span>
+                    <span class="faq-icon ml-4 shrink-0 transition-transform duration-300 text-gray-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </span>
+                </button>
+                <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+                    <p class="px-6 pb-6 text-gray-400 text-xs md:text-sm leading-relaxed font-light">
+                        Unlike traditional bookmark managers that require tedious manual tagging, Dotmark uses custom-tailored AI models to automatically assign tags, content types (e.g., threads, tools, tutorials), difficulty levels (e.g., beginner, advanced), and a calculated priority score to every bookmark.
+                    </p>
+                </div>
+            </div>
+
+            <!-- FAQ Item 3 -->
+            <div class="reveal faq-item rounded-2xl border border-white/[0.06] bg-white/[0.01] transition-all duration-300" data-delay="120">
+                <button class="w-full flex items-center justify-between p-6 text-left focus:outline-none" onclick="toggleFaq(this)">
+                    <span class="font-bold text-white text-sm md:text-base">Can I export my learning roadmaps from Dotmark?</span>
+                    <span class="faq-icon ml-4 shrink-0 transition-transform duration-300 text-gray-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </span>
+                </button>
+                <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+                    <p class="px-6 pb-6 text-gray-400 text-xs md:text-sm leading-relaxed font-light">
+                        Absolutely! Dotmark allows you to export any AI-generated roadmap, deep analysis, or personal study note as a clean, standardized Markdown file. You can easily copy and paste or import it into Notion, Obsidian, Bear, Logseq, or any other note-taking software.
+                    </p>
+                </div>
+            </div>
+
+            <!-- FAQ Item 4 -->
+            <div class="reveal faq-item rounded-2xl border border-white/[0.06] bg-white/[0.01] transition-all duration-300" data-delay="180">
+                <button class="w-full flex items-center justify-between p-6 text-left focus:outline-none" onclick="toggleFaq(this)">
+                    <span class="font-bold text-white text-sm md:text-base">Is Dotmark safe to use with my X (Twitter) account?</span>
+                    <span class="faq-icon ml-4 shrink-0 transition-transform duration-300 text-gray-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </span>
+                </button>
+                <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+                    <p class="px-6 pb-6 text-gray-400 text-xs md:text-sm leading-relaxed font-light">
+                        Yes, security is our top priority. Dotmark uses official, secure X (Twitter) OAuth2.0 authentication. We only request read-only access to your bookmarks and basic profile details. We never write, post, or change anything on your account.
+                    </p>
+                </div>
+            </div>
+
+            <!-- FAQ Item 5 -->
+            <div class="reveal faq-item rounded-2xl border border-white/[0.06] bg-white/[0.01] transition-all duration-300" data-delay="240">
+                <button class="w-full flex items-center justify-between p-6 text-left focus:outline-none" onclick="toggleFaq(this)">
+                    <span class="font-bold text-white text-sm md:text-base">How does Dotmark help me learn faster?</span>
+                    <span class="faq-icon ml-4 shrink-0 transition-transform duration-300 text-gray-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </span>
+                </button>
+                <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+                    <p class="px-6 pb-6 text-gray-400 text-xs md:text-sm leading-relaxed font-light">
+                        Instead of leaving bookmarks to gather dust, Dotmark transforms passive reading list links into active learning projects. For each bookmark, the AI extracts key prerequisites, creates phased action plans with clear learning phases, and designs step-by-step roadmaps with timeline estimations.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Accordion JS Script -->
+<script>
+function toggleFaq(button) {
+    const item = button.closest('.faq-item');
+    const answer = item.querySelector('.faq-answer');
+    const icon = item.querySelector('.faq-icon');
+    const isOpen = item.classList.contains('faq-open');
+
+    // Close all other open items
+    document.querySelectorAll('.faq-item').forEach(otherItem => {
+        if (otherItem !== item && otherItem.classList.contains('faq-open')) {
+            otherItem.classList.remove('faq-open', 'bg-white/[0.03]', 'border-white/10');
+            otherItem.querySelector('.faq-answer').style.maxHeight = '0px';
+            otherItem.querySelector('.faq-icon').classList.remove('rotate-180');
+        }
+    });
+
+    if (isOpen) {
+        item.classList.remove('faq-open', 'bg-white/[0.03]', 'border-white/10');
+        answer.style.maxHeight = '0px';
+        icon.classList.remove('rotate-180');
+    } else {
+        item.classList.add('faq-open', 'bg-white/[0.03]', 'border-white/10');
+        answer.style.maxHeight = answer.scrollHeight + 'px';
+        icon.classList.add('rotate-180');
+    }
+}
+</script>
+
+<!-- Structured Data (JSON-LD Schemas) for GEO / SGE Optimization -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://dotmark.io/#software",
+      "name": "Dotmark",
+      "url": "https://dotmark.io/",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "All",
+      "description": "Dotmark is an AI-powered bookmark intelligence tool for X (Twitter) that automatically categorizes, prioritizes, and builds actionable learning roadmaps from saved tweets and threads.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0.00",
+        "priceCurrency": "USD"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://dotmark.io/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Dotmark and how does it work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Dotmark is an AI-powered bookmark intelligence tool for X (Twitter). It securely syncs with your X account via OAuth2, analyzes your saved bookmarks using advanced AI, and automatically categorizes them by topic, priority, difficulty, and actionable next steps."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does Dotmark organize X (Twitter) bookmarks?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Unlike traditional bookmark managers that require tedious manual tagging, Dotmark uses custom-tailored AI models to automatically assign tags, content types (e.g., threads, tools, tutorials), difficulty levels (e.g., beginner, advanced), and a calculated priority score to every bookmark."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I export my learning roadmaps from Dotmark?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, Dotmark allows you to export any AI-generated roadmap, deep analysis, or personal study note as a clean, standardized Markdown file. You can easily copy and paste or import it into Notion, Obsidian, Bear, Logseq, or any other note-taking software."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Dotmark safe to use with my X (Twitter) account?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, security is our top priority. Dotmark uses official, secure X (Twitter) OAuth2.0 authentication. We only request read-only access to your bookmarks and basic profile details. We never write, post, or change anything on your account."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does Dotmark help me learn faster?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Instead of leaving bookmarks to gather dust, Dotmark transforms passive reading list links into active learning projects. For each bookmark, the AI extracts key prerequisites, creates phased action plans with clear learning phases, and designs step-by-step roadmaps with timeline estimations."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+
 <!-- CTA -->
 <section class="border-t border-white/[0.04]">
     <div class="relative max-w-3xl mx-auto px-6 py-28 text-center overflow-hidden">
