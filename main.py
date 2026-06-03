@@ -2,7 +2,7 @@ import os
 import secrets
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Response
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -720,6 +720,62 @@ async def terms(request: Request):
 @app.get("/refund", response_class=HTMLResponse)
 async def refund(request: Request):
     return templates.TemplateResponse("refund.html", {"request": request})
+
+
+@app.get("/sitemap.xml")
+async def sitemap():
+    content = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://dotmark.io/</loc>
+    <lastmod>2026-06-03</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://dotmark.io/pricing</loc>
+    <lastmod>2026-06-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dotmark.io/privacy</loc>
+    <lastmod>2026-06-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://dotmark.io/terms</loc>
+    <lastmod>2026-06-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://dotmark.io/refund</loc>
+    <lastmod>2026-06-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+</urlset>"""
+    return Response(content=content, media_type="application/xml")
+
+
+@app.get("/robots.txt")
+async def robots():
+    content = """User-agent: *
+Allow: /
+Allow: /pricing
+Allow: /privacy
+Allow: /terms
+Allow: /refund
+Disallow: /dashboard
+Disallow: /bookmark/
+Disallow: /auth/
+Disallow: /checkout/
+Disallow: /webhooks/
+
+Sitemap: https://dotmark.io/sitemap.xml"""
+    return Response(content=content, media_type="text/plain")
 
 
 @app.post("/account/delete")
